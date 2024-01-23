@@ -1,0 +1,11 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "C_Cpp.default.configurationProvider": "particle.particle-vscode-core",
+    "files.associations": {
+        "*.ino": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled",
+    "particle.firmwareVersion": "4.2.0",
+    "particle.targetPlatform": "boron",
+    "particle.targetDevice": ""
+}
