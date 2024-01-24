@@ -28,7 +28,7 @@ float   sensorValue         = 0.0;
 void setup() {
     // Begin serial communication and wait for serial communication
     Serial.begin(9600);
-    while (!Serial);
+    // while (!Serial);
     // Print starting message
     Serial.println("Starting Device...");
 
