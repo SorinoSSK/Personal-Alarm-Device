@@ -1,3 +1,5 @@
+#include <mic.h>
+
 #include "Wire.h"
 #include "LSM6DS3.h"
 #include <ArduinoBLE.h>
