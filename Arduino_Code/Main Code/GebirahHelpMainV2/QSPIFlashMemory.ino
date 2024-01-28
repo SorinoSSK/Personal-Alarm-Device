@@ -46,17 +46,20 @@ static void qspi_handler(nrfx_qspi_evt_t event, void *p_context) {
 }
 
 static void QSPI_Status(char ASender[]) {  // Prints the QSPI Status
-    Serial.print("(");
-    Serial.print(ASender);
-    Serial.print(") QSPI is busy/idle ... Result = ");
-    Serial.println(nrfx_qspi_mem_busy_check() & 8);
-    Serial.print("(");
-    Serial.print(ASender);
-    Serial.print(") QSPI Status flag = 0x");
-    Serial.print(NRF_QSPI->STATUS, HEX);
-    Serial.print(" (from NRF_QSPI) or 0x");
-    Serial.print(*QSPI_Status_Ptr, HEX);
-    Serial.println(" (from *QSPI_Status_Ptr)");
+    if (Debug_Status == 2)
+    {
+        Serial.print("(");
+        Serial.print(ASender);
+        Serial.print(") QSPI is busy/idle ... Result = ");
+        Serial.println(nrfx_qspi_mem_busy_check() & 8);
+        Serial.print("(");
+        Serial.print(ASender);
+        Serial.print(") QSPI Status flag = 0x");
+        Serial.print(NRF_QSPI->STATUS, HEX);
+        Serial.print(" (from NRF_QSPI) or 0x");
+        Serial.print(*QSPI_Status_Ptr, HEX);
+        Serial.println(" (from *QSPI_Status_Ptr)");
+    }
 }
 
 static void QSPI_PrintData(uint16_t *AnAddress, uint32_t AnAmount) {
@@ -90,7 +93,7 @@ static nrfx_err_t QSPI_IsReady() {
 
 static nrfx_err_t QSPI_WaitForReady() {
     while (QSPI_IsReady() == NRFX_ERROR_BUSY) {
-        if (Debug_On) {
+        if (Debug_Status == 2) {
             Serial.print("*QSPI_Status_Ptr & 8 = ");
             Serial.print(*QSPI_Status_Ptr & 8);
             Serial.print(", *QSPI_Status_Ptr & 0x01000000 = 0x");
@@ -138,24 +141,24 @@ static nrfx_err_t QSPI_Initialise() {  // Initialises the QSPI and NRF LOG
     while (Error_Code != 0) {
         Error_Code = nrfx_qspi_init(&QSPIConfig, NULL, NULL);
         if (Error_Code != NRFX_SUCCESS) {
-            if (Debug_On) {
+            if (Debug_Status == 2) {
                 Serial.print("(QSPI_Initialise) nrfx_qspi_init returned : ");
                 Serial.println(Error_Code);
             }
         } else {
-            if (Debug_On) {
+            if (Debug_Status == 2) {
                 Serial.println("(QSPI_Initialise) nrfx_qspi_init successful");
             }
         }
     }
     QSPI_Status("QSPI_Initialise (Before QSIP_Configure_Memory)");
     QSIP_Configure_Memory();
-    if (Debug_On) {
+    if (Debug_Status == 2) {
         Serial.println("(QSPI_Initialise) Wait for QSPI to be ready ...");
     }
     NRF_QSPI->TASKS_ACTIVATE = 1;
     QSPI_WaitForReady();
-    if (Debug_On) {
+    if (Debug_Status == 2) {
         Serial.println("(QSPI_Initialise) QSPI is ready");
     }
     return QSPI_IsReady();
@@ -166,7 +169,7 @@ static void QSPI_Erase(uint32_t AStartAddress) {
     bool QSPIReady = false;
     bool AlreadyPrinted = false;
 
-    if (Debug_On) {
+    if (Debug_Status == 2) {
         Serial.println("(QSPI_Erase) Erasing memory");
     }
     while (!QSPIReady) {
@@ -181,17 +184,17 @@ static void QSPI_Erase(uint32_t AStartAddress) {
         }
     }
     QSPI_Status("QSPI_Erase (Finished Waiting)");
-    if (Debug_On) {
+    if (Debug_Status == 2) {
         TimeTaken = millis();
     }
     if (nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_64KB, AStartAddress) != NRFX_SUCCESS) {
-        if (Debug_On) {
+        if (Debug_Status == 2) {
             Serial.print("(QSPI_Initialise_Page) QSPI Address 0x");
             Serial.print(AStartAddress, HEX);
             Serial.println(" failed to erase!");
         }
     } else {
-        if (Debug_On) {
+        if (Debug_Status == 2) {
             TimeTaken = millis() - TimeTaken;
             Serial.print("(QSPI_Initialise_Page) QSPI took ");
             Serial.print(TimeTaken);
@@ -215,14 +218,14 @@ static void QSIP_Configure_Memory() {
     };
     QSPI_WaitForReady();
     if (nrfx_qspi_cinstr_xfer(&QSPICinstr_cfg, NULL, NULL) != NRFX_SUCCESS) {  // Send reset enable
-        if (Debug_On) {
+        if (Debug_Status == 2) {
         Serial.println("(QSIP_Configure_Memory) QSPI 'Send reset enable' failed!");
         }
     } else {
         QSPICinstr_cfg.opcode = QSPI_STD_CMD_RST;
         QSPI_WaitForReady();
         if (nrfx_qspi_cinstr_xfer(&QSPICinstr_cfg, NULL, NULL) != NRFX_SUCCESS) {  // Send reset command
-        if (Debug_On) {
+        if (Debug_Status == 2) {
             Serial.println("(QSIP_Configure_Memory) QSPI Reset failed!");
         }
         } else {
@@ -230,7 +233,7 @@ static void QSIP_Configure_Memory() {
             QSPICinstr_cfg.length = NRF_QSPI_CINSTR_LEN_3B;
             QSPI_WaitForReady();
             if (nrfx_qspi_cinstr_xfer(&QSPICinstr_cfg, &temporary, NULL) != NRFX_SUCCESS) {  // Switch to qspi mode
-                if (Debug_On) {
+                if (Debug_Status == 2) {
                     Serial.println("(QSIP_Configure_Memory) QSPI failed to switch to QSPI mode!");
                 }
             } else {
@@ -240,109 +243,52 @@ static void QSIP_Configure_Memory() {
     }
 }
 
-// void setup() {
-//     uint32_t Error_Code;
-//     uint32_t TimeTaken;
-//     uint16_t i;
+// Write json data to memory
+static void storeJSONToMemory()
+{
+    String jsonString;
+    serializeJson(jsonData, jsonString);
+    // Print String only it debugging
+    if (Debug_Status == 2)
+    {
+        Serial.println(jsonString);
+    }
+    // Wait Memory to be ready for erasing and then writing.
+    QSPI_WaitForReady();
+    QSPI_Erase(0);
+    QSPI_WaitForReady();
+    // Convert JSON string back to unsigned int 16 for writing
+    stringToUint16(jsonString, pBuf);
+    if (Debug_Status == 2)
+    {
+        QSPI_PrintDataChar(&pBuf[0]);
+    }
+    // Write JSON into memory
+    Error_Code = nrfx_qspi_write(pBuf, MemToUse, 0x0);
+    QSPI_WaitForReady();
+    // If no error, indicate successful write. Else indicate fail write and proceed.
+    if (Error_Code == 0)
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("Data written successfully.");
+        }
+    }
+    else
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("Data write failed.");
+        }
+    }
+}
 
-//     delay(10000);
-//     Serial.begin(9600);
-//     while (!Serial) {}
-
-//     if (Debug_On) {
-//         Serial.println("(Setup) QSPI Initialising ...");
-//     }
-//     if (QSPI_Initialise() != NRFX_SUCCESS) {
-//         if (Debug_On) {
-//         Serial.println("(Setup) QSPI Memory failed to start!");
-//         }
-//     } else {
-//         if (Debug_On) {
-//         Serial.println("(Setup) QSPI initialised and ready");
-//         QSPI_Status("Setup (After initialise)");
-//         }
-//     }
-
-//     if (Debug_On) {
-//         Serial.print("(Setup) QSPI is about to be read and then erased. Current busy state is = ");
-//         Serial.println(QSPI_IsReady());
-//     }
-
-//     // QSPI Speed Test
-//     if (Debug_On) {
-//         QSPI_Status("Setup (Before read)");
-//         TimeTaken = millis();
-//     }
-//     Error_Code = nrfx_qspi_read(pBuf, MemToUse, 0x0);
-//     if (Debug_On) {
-//         TimeTaken = millis() - TimeTaken;
-//         Serial.print("(Setup) QSPI took ");
-//         Serial.print(TimeTaken);
-//         Serial.print("ms to read ");
-//         Serial.print(MemToUse / 1024);
-//         Serial.print("Kb ... Read result = ");
-//         Serial.println(Error_Code);
-//         QSPI_Status("Setup (After read)");
-//         QSPI_WaitForReady();
-//         QSPI_PrintData(&pBuf[0], 10);
-//     }
-//     if (Debug_On) {
-//         Serial.println("QSPI Erasing 64Kb of memory");
-//     }
-//     QSPI_Erase(0);
-//     if (Debug_On) {
-//         Serial.println("(Setup) QSPI read after erase");
-//         TimeTaken = millis();
-//     }
-//     QSPI_WaitForReady();
-//     Error_Code = nrfx_qspi_read(pBuf, MemToUse, 0x0);
-//     if (Debug_On) {
-//         TimeTaken = millis() - TimeTaken;
-//         Serial.print("(Setup) QSPI took ");
-//         Serial.print(TimeTaken);
-//         Serial.print("ms to read ");
-//         Serial.print(MemToUse / 1024);
-//         Serial.print("Kb ... Read result = ");
-//         Serial.println(Error_Code);
-//         QSPI_WaitForReady();
-//         QSPI_PrintData(&pBuf[0], 10);
-//     }
-//     for (i = 0; i < MemToUse / 2; i++) {
-//         pBuf[i] = i * 2;
-//     }
-//     QSPI_WaitForReady();
-//     if (Debug_On) {
-//         Serial.println("(Setup) Just before QSPI write");
-//         TimeTaken = millis();
-//     }
-//     Error_Code = nrfx_qspi_write(dBuf, MemToUse, 0x0);
-//     if (Debug_On) {
-//         TimeTaken = millis() - TimeTaken;
-//         Serial.print("(Setup) QSPI took ");
-//         Serial.print(TimeTaken);
-//         Serial.print("ms to write ");
-//         Serial.print(MemToUse / 1024);
-//         Serial.print("Kb ... Write result = ");
-//         Serial.println(Error_Code);
-//     }
-//     QSPI_WaitForReady();
-//     if (Debug_On) {
-//         Serial.println("(Setup) Just before QSPI read");
-//         TimeTaken = millis();
-//     }
-//     Error_Code = nrfx_qspi_read(pBuf, MemToUse, 0x0);
-//     if (Debug_On) {
-//         TimeTaken = millis() - TimeTaken;
-//         Serial.print("(Setup) QSPI took ");
-//         Serial.print(TimeTaken);
-//         Serial.print("ms to read ");
-//         Serial.print(MemToUse / 1024);
-//         Serial.print("Kb ... Read result = ");
-//         Serial.println(Error_Code);
-//         QSPI_WaitForReady();
-//         QSPI_PrintData(&pBuf[0], MemToUse / 1024);
-//     }
-//     QSPI_WaitForReady();
-//     QSPI_Status("Setup");
-//     // QSPI Speed Test Complete
-// }
+static void resetMemory()
+{
+    jsonData["DeviceToken"] = "6814a608-5385-4ce1-917d-c51840bb75a0";
+    jsonData["DResetToken"] = "52702af6-87d2-4290-a01b-036c88ec2811";
+    DynamicJsonDocument doc(NoOfEmergencyContact);
+    JsonArray EmergencyNoArr = doc.createNestedArray("EmergencyNoArr");
+    jsonData["EmergencyNo"] = EmergencyNoArr;
+    storeJSONToMemory();
+}
