@@ -56,13 +56,20 @@ void bluetoothFunction() {
                 DeserializationError EmergencyListError = deserializeJson(EmergencyList, String(EmergencyNo.value()));
                 if (EmergencyListError)
                 {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.println("Invalid list format!");
+                    }
                     EmergencyNo.setValue("Invalid list format!");
                 }
                 else
                 {
-                    JsonArray EmergencyNoArr = EmergencyList["EmergencyNoArr"];
-                    jsonData["EmergencyNo"] = EmergencyNoArr;
+                    jsonData["EmergencyNo"] = EmergencyList;
                     bluetoothModified = true;
+                    if (Debug_Status != 0)
+                    {
+                        Serial.println("Emergency list set!");
+                    }
                     EmergencyNo.setValue("Emergency list set!");
                 }
             }
@@ -98,7 +105,7 @@ void bluetoothFunction() {
                 if (jsonData["DeviceToken"] == String(BLESAuthNum.value()))
                 {
                     bluetoothAuthenticated = true;
-                    BLESAuthNum.setValue("Bluetooth Authentication Successful.");
+                    BLESAuthNum.setValue("Bluetooth Successful.");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Successful.");
@@ -106,7 +113,7 @@ void bluetoothFunction() {
                 }
                 else
                 {
-                    BLESAuthNum.setValue("Bluetooth Authentication Failed.");
+                    BLESAuthNum.setValue("Bluetooth Failed.");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Failed.");

@@ -69,7 +69,7 @@ bool bluetoothAuthenticated = false;
 unsigned long BLETimer = millis();
 
 // Settings
-uint16_t Debug_Status       = 0;
+uint16_t Debug_Status       = 2;
 uint16_t Bluetooth_Time_Out = 30*1000;
 
 // Bluetooh Settings
@@ -81,7 +81,7 @@ BLEStringCharacteristic EmergencyNo("00001811-0000-1000-8000-00805F9B34F1", BLER
 BLEStringCharacteristic getPDMSmple("00001811-0000-1000-8000-00805F9B34F2", BLERead | BLEWrite | BLENotify, 25);
 
 // BLECharacteristic PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, sizeof(short)*SAMPLES);
-BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , mic_config.buf_size);
+BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , 8*mic_config.buf_size);
 
 void setup()
 {
