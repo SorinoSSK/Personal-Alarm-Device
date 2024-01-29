@@ -53,7 +53,7 @@ short sampleBuffer[128];
 short sampleBuffer1[SAMPLES] = {0};
 // Number of audio samples read
 volatile int samplesRead = 0;
-int sample_cnt = 0;
+uint32_t sample_cnt = 0;
 FilterBuHp filter;
 
 // Other Settings
@@ -63,6 +63,7 @@ uint32_t Error_Code;
 uint32_t NoOfEmergencyContact = JSON_ARRAY_SIZE(10);
 bool MicRecord = false;
 bool MicRecordRdy = false;
+bool SendMicRecord = false;
 bool resetDevice = false;
 bool bluetoothConnected = false;
 bool bluetoothAuthenticated = false;
@@ -74,13 +75,14 @@ uint16_t Bluetooth_Time_Out = 30*1000;
 
 // Bluetooh Settings
 // UUID for Alert Notification Service
-BLEService myService("00001811-0000-1000-8000-00805F9B34FB");
+BLEService myService("00001811-0000-1000-8000-00805F9B34E0");
 // Set BLE to read and write (When phone is unlocked), and notify (when phone is on locked)
 BLEStringCharacteristic BLESAuthNum("00001811-0000-1000-8000-00805F9B34F0", BLEWrite, 100);
 BLEStringCharacteristic EmergencyNo("00001811-0000-1000-8000-00805F9B34F1", BLERead | BLEWrite | BLENotify, 100);
 BLEStringCharacteristic getPDMSmple("00001811-0000-1000-8000-00805F9B34F2", BLEWrite, 25);
 
-BLECharacteristic PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, sizeof(short)*SAMPLES);
+// BLECharacteristic PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, sizeof(short)*SAMPLES);
+BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, 128);
 
 void setup()
 {
@@ -247,7 +249,7 @@ void loop()
         resetMemory();
         resetDevice = false;
     }
-    // microphoneFunction();
+    microphoneFunction();
 }
 
 static void readAllPins()

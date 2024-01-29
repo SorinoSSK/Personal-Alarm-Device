@@ -38,19 +38,7 @@ void bluetoothFunction() {
                 }
                 if (String(getPDMSmple.value()) == "getSamples")
                 {
-                    if (MicRecordRdy)
-                    {
-                        // byte* sampleByteArray = reinterpret_cast<byte*>(sampleBuffer1);
-                        PDMsMicRecs.writeValue(&sampleBuffer1, sizeof(short)*SAMPLES);
-                        MicRecordRdy = false;
-                    }
-                    else
-                    {
-                        PDMsMicRecs.setValue("MIC samples not ready!");
-                        // String rtnString = "MIC samples not ready!"
-                        // byte rtnBytes[25];
-                        // rtnString.getBytes(rtnBytes, sizeof(rtnBytes));
-                    }
+                    bool SendMicRecord = true;
                 }
             }
             if (EmergencyNo.written())
@@ -68,6 +56,30 @@ void bluetoothFunction() {
             {
                 storeJSONToMemory();
                 bluetoothModified = false;
+            }
+            if (SendMicRecord)
+            {
+                if (MicRecordRdy) {
+                    int remainingSamples = SAMPLES - sample_cnt;
+                    int samplesToCopy = min(mic_config.buf_size, remainingSamples);
+
+                    memcpy(sampleBuffer, sampleBuffer1 + sample_cnt, samplesToCopy * sizeof(short));
+
+                    sample_cnt += samplesToCopy;
+                    samplesRead = 0;
+
+                    if (sample_cnt >= SAMPLES) 
+                    {
+                        MicRecordRdy = false;
+                        SendMicRecord = false;
+                        sample_cnt = 0;
+                    }
+                    PDMsMicRecs.writeValue(sampleBuffer, mic_config.buf_size);
+                } 
+                else 
+                {
+                    PDMsMicRecs.setValue("MIC samples not ready!");
+                }
             }
         }
         // if bluetooth is not authenticated, wait for authentication

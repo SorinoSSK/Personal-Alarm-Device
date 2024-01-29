@@ -30,16 +30,17 @@ void microphoneFunction()
 {
     if (samplesRead) 
     {
-        // Print samples to the serial monitor or plotter
-        for (int i = 0; i < samplesRead; i++) 
+        // Use memcpy for bulk copy
+        memcpy(sampleBuffer1 + sample_cnt, sampleBuffer, samplesRead * sizeof(short));
+
+        sample_cnt += samplesRead;
+
+        if (sample_cnt >= SAMPLES) 
         {
-            sampleBuffer1[sample_cnt++] = sampleBuffer[i];
-            if(sample_cnt >= SAMPLES)
-            {
-                MicRecordRdy = true;
-                samplesRead = 0;
-                break;
-            }
+            // Consider renaming MicRecordRdy for clarity
+            MicRecordRdy = true;
+            sample_cnt = 0;
         }
+        samplesRead = 0;
     }
 }
