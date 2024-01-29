@@ -7,40 +7,49 @@ void audio_rec_callback(uint16_t *buf, uint32_t buf_len)
 {
     static uint32_t idx = 0;
     // Copy samples from DMA buffer to inference buffer
-    if (MicRecord)
+    if (SendMicRecord)
     {
-        for (uint32_t i = 0; i < buf_len; i++) 
+        if (!Mic.begin()) 
         {
-            // Convert 12-bit unsigned ADC value to 16-bit PCM (signed) audio value
-            // sampleBuffer[idx++] = buf[i];
-            sampleBuffer[idx++] = filter.step((int16_t)(buf[i] - 1024) * 16);   //with Filter
-                                                                                //recording_buf[idx++] = (int16_t)(buf[i] - 1024) * 16;               // without filter
-            if (idx >= mic_config.buf_size) 
+            if (Debug_Status != 0)
             {
-                idx = 0;
-                //record_ready = true;
-                samplesRead = mic_config.buf_size;
-                break;
+                Serial.println("PDM MIC Error!");
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < buf_len; i++) 
+            {
+                // Convert 12-bit unsigned ADC value to 16-bit PCM (signed) audio value
+                // sampleBuffer[idx++] = buf[i];
+                sampleBuffer[idx++] = filter.step((int16_t)(buf[i] - 1024) * 16);   //with Filter
+                if (idx >= mic_config.buf_size) 
+                {
+                    idx = 0;
+                    //record_ready = true;
+                    PDMsMicRecs.writeValue(sampleBuffer, sizeof(short)*mic_config.buf_size);
+                    break;
+                }
             }
         }
     }
 }
 
-void microphoneFunction()
-{
-    if (samplesRead) 
-    {
-        // Use memcpy for bulk copy
-        memcpy(sampleBuffer1 + sample_cnt, sampleBuffer, samplesRead * sizeof(short));
+// void microphoneFunction()
+// {
+//     if (samplesRead) 
+//     {
+//         // Use memcpy for bulk copy
+//         memcpy(sampleBuffer1 + sample_cnt, sampleBuffer, samplesRead * sizeof(short));
 
-        sample_cnt += samplesRead;
+//         sample_cnt += samplesRead;
 
-        if (sample_cnt >= SAMPLES) 
-        {
-            // Consider renaming MicRecordRdy for clarity
-            MicRecordRdy = true;
-            sample_cnt = 0;
-        }
-        samplesRead = 0;
-    }
-}
+//         if (sample_cnt >= SAMPLES) 
+//         {
+//             // Consider renaming MicRecordRdy for clarity
+//             MicRecordRdy = true;
+//             sample_cnt = 0;
+//         }
+//         samplesRead = 0;
+//     }
+// }

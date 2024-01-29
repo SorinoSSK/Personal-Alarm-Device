@@ -50,7 +50,6 @@ mic_config_t mic_config{
 };
 NRF52840_ADC_Class Mic(&mic_config);
 short sampleBuffer[128];
-short sampleBuffer1[SAMPLES] = {0};
 // Number of audio samples read
 volatile int samplesRead = 0;
 uint32_t sample_cnt = 0;
@@ -70,19 +69,19 @@ bool bluetoothAuthenticated = false;
 unsigned long BLETimer = millis();
 
 // Settings
-uint16_t Debug_Status       = 1;
+uint16_t Debug_Status       = 0;
 uint16_t Bluetooth_Time_Out = 30*1000;
 
 // Bluetooh Settings
 // UUID for Alert Notification Service
 BLEService myService("00001811-0000-1000-8000-00805F9B34E0");
 // Set BLE to read and write (When phone is unlocked), and notify (when phone is on locked)
-BLEStringCharacteristic BLESAuthNum("00001811-0000-1000-8000-00805F9B34F0", BLEWrite, 100);
+BLEStringCharacteristic BLESAuthNum("00001811-0000-1000-8000-00805F9B34F0", BLERead | BLEWrite | BLENotify, 100);
 BLEStringCharacteristic EmergencyNo("00001811-0000-1000-8000-00805F9B34F1", BLERead | BLEWrite | BLENotify, 100);
-BLEStringCharacteristic getPDMSmple("00001811-0000-1000-8000-00805F9B34F2", BLEWrite, 25);
+BLEStringCharacteristic getPDMSmple("00001811-0000-1000-8000-00805F9B34F2", BLERead | BLEWrite | BLENotify, 25);
 
 // BLECharacteristic PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, sizeof(short)*SAMPLES);
-BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, 128);
+BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , mic_config.buf_size);
 
 void setup()
 {
@@ -123,7 +122,7 @@ void setup()
         {
             Serial.println("QSPI Memory failed to start!");
         }
-    }
+      }
     else
     {
         if (Debug_Status != 0)
@@ -249,7 +248,7 @@ void loop()
         resetMemory();
         resetDevice = false;
     }
-    microphoneFunction();
+    // microphoneFunction();
 }
 
 static void readAllPins()

@@ -38,7 +38,11 @@ void bluetoothFunction() {
                 }
                 if (String(getPDMSmple.value()) == "getSamples")
                 {
-                    bool SendMicRecord = true;
+                    SendMicRecord = true;
+                }
+                else if (String(getPDMSmple.value()) == "stopSamples")
+                {
+                    SendMicRecord = false;
                 }
             }
             if (EmergencyNo.written())
@@ -48,38 +52,25 @@ void bluetoothFunction() {
                     Serial.print("Received Emergency No.: ");
                     Serial.println(String(EmergencyNo.value()));
                 }
-                jsonData["EmergencyNo"] = String(EmergencyNo.value());
-                bluetoothModified = true;
+                DynamicJsonDocument EmergencyList(NoOfEmergencyContact);
+                DeserializationError EmergencyListError = deserializeJson(EmergencyList, String(EmergencyNo.value()));
+                if (EmergencyListError)
+                {
+                    EmergencyNo.setValue("Invalid list format!");
+                }
+                else
+                {
+                    JsonArray EmergencyNoArr = EmergencyList["EmergencyNoArr"];
+                    jsonData["EmergencyNo"] = EmergencyNoArr;
+                    bluetoothModified = true;
+                    EmergencyNo.setValue("Emergency list set!");
+                }
             }
             // If any modification data is written, store to memory
             if (bluetoothModified)
             {
                 storeJSONToMemory();
                 bluetoothModified = false;
-            }
-            if (SendMicRecord)
-            {
-                if (MicRecordRdy) {
-                    int remainingSamples = SAMPLES - sample_cnt;
-                    int samplesToCopy = min(mic_config.buf_size, remainingSamples);
-
-                    memcpy(sampleBuffer, sampleBuffer1 + sample_cnt, samplesToCopy * sizeof(short));
-
-                    sample_cnt += samplesToCopy;
-                    samplesRead = 0;
-
-                    if (sample_cnt >= SAMPLES) 
-                    {
-                        MicRecordRdy = false;
-                        SendMicRecord = false;
-                        sample_cnt = 0;
-                    }
-                    PDMsMicRecs.writeValue(sampleBuffer, mic_config.buf_size);
-                } 
-                else 
-                {
-                    PDMsMicRecs.setValue("MIC samples not ready!");
-                }
             }
         }
         // if bluetooth is not authenticated, wait for authentication
@@ -107,6 +98,7 @@ void bluetoothFunction() {
                 if (jsonData["DeviceToken"] == String(BLESAuthNum.value()))
                 {
                     bluetoothAuthenticated = true;
+                    BLESAuthNum.setValue("Bluetooth Authentication Successful.");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Successful.");
@@ -114,6 +106,7 @@ void bluetoothFunction() {
                 }
                 else
                 {
+                    BLESAuthNum.setValue("Bluetooth Authentication Failed.");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Failed.");
