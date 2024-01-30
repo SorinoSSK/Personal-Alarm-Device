@@ -1,4 +1,4 @@
-void bluetoothFunction() {
+static void bluetoothFunction() {
     // Check for modification of data
     bool bluetoothModified = false;
     // Call this every loop to publish bluetooth
@@ -34,14 +34,15 @@ void bluetoothFunction() {
                 if (Debug_Status != 0)
                 {
                     Serial.print("Received request for PDM record: ");
-                    Serial.println(String(getPDMSmple.value()));
                 }
                 if (String(getPDMSmple.value()) == "getSamples")
                 {
+                    Serial.println("steaming samples");
                     SendMicRecord = true;
                 }
                 else if (String(getPDMSmple.value()) == "stopSamples")
                 {
+                    Serial.println("stop steaming");
                     SendMicRecord = false;
                 }
             }

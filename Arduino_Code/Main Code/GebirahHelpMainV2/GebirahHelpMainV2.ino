@@ -13,7 +13,7 @@
 #include "nrf_log_ctrl.h"
 #include "avr/interrupt.h"
 #include "app_util_platform.h"
-#include "processing/filters.h"
+// #include "processing/filters.h"
 #include "nrf_log_default_backends.h"
 
 // QSPI Settings
@@ -35,6 +35,7 @@ static bool QSPIWait                = false;
 // 16bit used as that is what this memory is going to be used for
 static uint16_t pBuf[MemToUse / 2]  = {0};
 static uint32_t *BufMem             = (uint32_t *)&pBuf;
+static uint32_t idx                 = 0;
 
 // IMU Settings
 LSM6DS3 myIMU(I2C_MODE, 0x6A); // I2C device address 0x6A
@@ -53,7 +54,7 @@ short sampleBuffer[128];
 // Number of audio samples read
 volatile int samplesRead = 0;
 uint32_t sample_cnt = 0;
-FilterBuHp filter;
+// FilterBuHp filter;
 
 // Other Settings
 DynamicJsonDocument jsonData(MemToUse);
@@ -62,7 +63,8 @@ uint32_t Error_Code;
 uint32_t NoOfEmergencyContact = JSON_ARRAY_SIZE(10);
 bool MicRecord = false;
 bool MicRecordRdy = false;
-bool SendMicRecord = false;
+volatile static bool SendMicRecord = false;
+volatile static bool SendMicRecordFlag = false;
 bool resetDevice = false;
 bool bluetoothConnected = false;
 bool bluetoothAuthenticated = false;
@@ -88,11 +90,11 @@ void setup()
     // Begin serial communication and wait for serial communicationMic
     Serial.begin(9600);
     // Configure the data receive callback
-    Mic.set_callback(audio_rec_callback);
     if (Debug_Status != 0)
     {
         while (!Serial);
     }
+    Mic.set_callback(audio_rec_callback);
 
     // Print starting message
     if (Debug_Status != 0)
@@ -241,6 +243,7 @@ void setup()
 
 void loop()
 {
+    Serial.println("In Code");
     readAllPins();
     bluetoothFunction();
     if (resetDevice)
@@ -248,7 +251,7 @@ void loop()
         resetMemory();
         resetDevice = false;
     }
-    // microphoneFunction();
+    microphoneFunction();
 }
 
 static void readAllPins()
