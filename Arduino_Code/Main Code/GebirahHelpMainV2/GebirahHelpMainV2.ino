@@ -13,8 +13,11 @@
 #include "nrf_log_ctrl.h"
 #include "avr/interrupt.h"
 #include "app_util_platform.h"
-// #include "processing/filters.h"
 #include "nrf_log_default_backends.h"
+
+#if defined(WIO_TERMINAL)
+#include "processing/filters.h"
+#endif
 
 // QSPI Settings
 #define QSPI_STD_CMD_WRSR 0x01
@@ -35,44 +38,70 @@ static bool QSPIWait                = false;
 // 16bit used as that is what this memory is going to be used for
 static uint16_t pBuf[MemToUse / 2]  = {0};
 static uint32_t *BufMem             = (uint32_t *)&pBuf;
-static uint32_t idx                 = 0;
 
 // IMU Settings
 LSM6DS3 myIMU(I2C_MODE, 0x6A); // I2C device address 0x6A
 
 // PDM Settings
+#if defined(WIO_TERMINAL)
 #define DEBUG 1                 // Enable pin pulse during ISR  
-#define SAMPLES 16000*15        // 15 = 15 seconds
+#define SAMPLES 16000*3
+#elif defined(ARDUINO_ARCH_NRF52840)
+#define DEBUG 1                 // Enable pin pulse during ISR  
+#define SAMPLES 1600
+#endif
+
 mic_config_t mic_config{
   .channel_cnt = 1,
   .sampling_rate = 16000,
-  .buf_size = 128,
+#if defined(WIO_TERMINAL)
+  .buf_size = 320,
+  .debug_pin = 1                // Toggles each DAC ISR (if DEBUG is set to 1)
+#elif defined(ARDUINO_ARCH_NRF52840)
+  .buf_size = 1600,
   .debug_pin = LED_BUILTIN                // Toggles each DAC ISR (if DEBUG is set to 1)
+#endif
 };
+#if defined(WIO_TERMINAL)
+DMA_ADC_Class Mic(&mic_config);
+#elif defined(ARDUINO_ARCH_NRF52840)
 NRF52840_ADC_Class Mic(&mic_config);
-short sampleBuffer[128];
-// Number of audio samples read
-volatile int samplesRead = 0;
-uint32_t sample_cnt = 0;
-// FilterBuHp filter;
+#endif
+int8_t recording_buf[SAMPLES];
+volatile uint8_t recording = 0;
+volatile static bool record_ready = false;
+volatile static bool stop_record = false;
+#if defined(WIO_TERMINAL)
+FilterBuHp filter;
+#endif
+
+// Button Settings
+uint8_t FirstBtnPin = 0;
+bool FirstBtnStatus = false;
+bool FirstBtnFirstPress = false;
+bool FirstBtnRlseStatus = false;
+long FirstBtnTimer = 0;
+uint8_t SeconBtnPin = 1;
+bool SeconBtnStatus = false;
+bool SeconBtnFirstPress = false;
+bool SeconBtnRlseStatus = false;
+long SeconBtnTimer = 0;
 
 // Other Settings
 DynamicJsonDocument jsonData(MemToUse);
 // StaticJsonDocument<MemToUse> jsonData;
 uint32_t Error_Code;
 uint32_t NoOfEmergencyContact = JSON_ARRAY_SIZE(10);
-bool MicRecord = false;
-bool MicRecordRdy = false;
-volatile static bool SendMicRecord = false;
-volatile static bool SendMicRecordFlag = false;
 bool resetDevice = false;
 bool bluetoothConnected = false;
 bool bluetoothAuthenticated = false;
+bool TokenModifyToken = false;
 unsigned long BLETimer = millis();
 
 // Settings
 uint16_t Debug_Status       = 2;
 uint16_t Bluetooth_Time_Out = 30*1000;
+uint16_t Modify_Token_Time_Out = 30*1000;
 
 // Bluetooh Settings
 // UUID for Alert Notification Service
@@ -81,9 +110,12 @@ BLEService myService("00001811-0000-1000-8000-00805F9B34E0");
 BLEStringCharacteristic BLESAuthNum("00001811-0000-1000-8000-00805F9B34F0", BLERead | BLEWrite | BLENotify, 100);
 BLEStringCharacteristic EmergencyNo("00001811-0000-1000-8000-00805F9B34F1", BLERead | BLEWrite | BLENotify, 100);
 BLEStringCharacteristic getPDMSmple("00001811-0000-1000-8000-00805F9B34F2", BLERead | BLEWrite | BLENotify, 25);
+BLEStringCharacteristic getDvStatus("00001811-0000-1000-8000-00805F9B34F4", BLERead | BLEWrite | BLENotify, 25);
+BLEStringCharacteristic DeviceToken("00001811-0000-1000-8000-00805F9B34F5", BLERead | BLEWrite | BLENotify, 100);
+BLEStringCharacteristic BtnCodeSend("00001811-0000-1000-8000-00805F9B34F6", BLERead | BLENotify, 100);
 
 // BLECharacteristic PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead, sizeof(short)*SAMPLES);
-BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , 8*mic_config.buf_size);
+BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , mic_config.buf_size);
 
 void setup()
 {
@@ -94,6 +126,11 @@ void setup()
     {
         while (!Serial);
     }
+
+    #if defined(WIO_TERMINAL)
+        pinMode(WIO_KEY_A, INPUT_PULLUP);
+    #endif
+    
     Mic.set_callback(audio_rec_callback);
 
     // Print starting message
@@ -169,8 +206,19 @@ void setup()
     // Add the service (with its characteristics) to the BLE server
     myService.addCharacteristic(BLESAuthNum);
     myService.addCharacteristic(EmergencyNo);
-    myService.addCharacteristic(PDMsMicRecs);
     myService.addCharacteristic(getPDMSmple);
+    myService.addCharacteristic(PDMsMicRecs);
+    myService.addCharacteristic(getDvStatus);
+    myService.addCharacteristic(DeviceToken);
+    myService.addCharacteristic(BtnCodeSend);    
+
+    Serial.println(BLESAuthNum.valueSize());
+    Serial.println(EmergencyNo.valueSize());
+    Serial.println(getPDMSmple.valueSize());
+    Serial.println(PDMsMicRecs.valueSize());
+    Serial.println(getDvStatus.valueSize());
+    Serial.println(DeviceToken.valueSize());
+    Serial.println(BtnCodeSend.valueSize());
 
     BLE.addService(myService);
     // Start advertising the device
@@ -243,7 +291,7 @@ void setup()
 
 void loop()
 {
-    Serial.println("In Code");
+    // Serial.println("In Code");
     readAllPins();
     bluetoothFunction();
     if (resetDevice)
@@ -251,7 +299,8 @@ void loop()
         resetMemory();
         resetDevice = false;
     }
-    microphoneFunction();
+    debounce(FirstBtnPin, &FirstBtnStatus, &FirstBtnFirstPress, &FirstBtnRlseStatus, &FirstBtnTimer);
+    debounce(SeconBtnPin, &SeconBtnStatus, &SeconBtnFirstPress, &SeconBtnRlseStatus, &SeconBtnTimer);
 }
 
 static void readAllPins()

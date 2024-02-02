@@ -29,6 +29,116 @@ static void bluetoothFunction() {
         // if bluetooth is authenticated, perform task
         if (bluetoothAuthenticated)
         {
+            if (getDvStatus.written())
+            {
+                if (Debug_Status != 0)
+                {
+                    Serial.print("Received request for Device Status: ");
+                }
+                if(String(getDvStatus.value()) == "getIMUStatus")
+                {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.print("IMU - ");
+                        Serial.println(String(myIMU.begin() == 0));
+                    }
+                    getDvStatus.setValue(String(myIMU.begin() == 0));
+                }
+                else if (String(getDvStatus.value()) == "getLEDStatus")
+                {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.print("LED - ");
+                        Serial.println("verify light");
+                    }
+                    getDvStatus.setValue("1");
+                }
+                else if (String(getDvStatus.value()) == "getBuzzerStatus")
+                {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.print("Buzzer - ");
+                        Serial.println("verify sound");
+                    }
+                    getDvStatus.setValue("1");
+                }
+                else if (String(getDvStatus.value()) == "getMICStatus")
+                {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.print("MIC - ");
+                        Serial.println(String(Mic.begin()));
+                    }
+                    getDvStatus.setValue(String(Mic.begin()));
+                }
+                else if (String(getDvStatus.value()) == "getQSPIStatus")
+                {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.print("QSPI - ");
+                        Serial.println(String(QSPI_IsReady() == NRFX_SUCCESS));
+                    }
+                    getDvStatus.setValue(String(QSPI_IsReady() == NRFX_SUCCESS));
+                }
+                else
+                {
+                    if (Debug_Status != 0)
+                    {
+                        Serial.println("Invalid device.");
+                    }
+                    getDvStatus.setValue("Invalid device.");
+                }
+            }
+            if (DeviceToken.written())
+            {
+                if (Debug_Status != 0)
+                {
+                    Serial.print("Received data for Device Token: ");
+                }
+                if (!TokenModifyToken)
+                {
+                    if (jsonData["DResetToken"] == String(DeviceToken.value()))
+                    {
+                        if (Debug_Status != 0)
+                        {
+                            Serial.println("Reset token verified.");
+                        }
+                        DeviceToken.setValue("Reset verified.");
+                        TokenModifyToken = true;
+                        BLETimer = millis();
+                    }
+                    else
+                    {
+                        if (Debug_Status != 0)
+                        {
+                            Serial.println("Invalid reset token.");
+                        }
+                        DeviceToken.setValue("Invalid reset token");
+                    }
+                }
+                else
+                {
+                    if (String(DeviceToken.value()).length() == strlen(jsonData["DeviceToken"]))
+                    {
+                        jsonData["DeviceToken"] = DeviceToken.value();
+                        bluetoothModified = true;
+                        if (Debug_Status != 0)
+                        {
+                            Serial.println("Token modified.");
+                        }
+                        DeviceToken.setValue("Token modified.");
+                        TokenModifyToken = false;
+                    }
+                    else
+                    {
+                        if (Debug_Status != 0)
+                        {
+                            Serial.println("Invalid token length.");
+                        }
+                        DeviceToken.setValue("Invalid token length.");
+                    }
+                }
+            }
             if (getPDMSmple.written())
             {
                 if (Debug_Status != 0)
@@ -37,13 +147,21 @@ static void bluetoothFunction() {
                 }
                 if (String(getPDMSmple.value()) == "getSamples")
                 {
-                    Serial.println("steaming samples");
-                    SendMicRecord = true;
+                    Serial.println("steaming samples.");
+                    recording = 1;
+                    record_ready = false;  
+                    getPDMSmple.setValue("Streaming samples");
                 }
                 else if (String(getPDMSmple.value()) == "stopSamples")
                 {
-                    Serial.println("stop steaming");
-                    SendMicRecord = false;
+                    Serial.println("stop steaming.");
+                    stop_record = true;  
+                    getPDMSmple.setValue("Stop streaming");
+                }
+                else
+                {
+                    getPDMSmple.setValue("Invalid command");
+                    Serial.println("Invalid command.");
                 }
             }
             if (EmergencyNo.written())
@@ -80,6 +198,29 @@ static void bluetoothFunction() {
                 storeJSONToMemory();
                 bluetoothModified = false;
             }
+            if (FirstBtnStatus)
+            {
+                FirstBtnStatus = false;
+                BtnCodeSend.setValue("SeowAlert1");
+            }
+            else if (SeconBtnStatus)
+            {
+                SeconBtnStatus = false;
+                BtnCodeSend.setValue("ChongAlert2");
+            }
+            if (!recording && record_ready)
+            {
+                PDMsMicRecs.writeValue(recording_buf, sizeof(recording_buf));
+                if (stop_record)
+                {
+                    stop_record = false;
+                }
+                else
+                {
+                    recording = 1;
+                }
+                record_ready = false; 
+            }
         }
         // if bluetooth is not authenticated, wait for authentication
         // disconnect bluetooth on timeout
@@ -93,6 +234,8 @@ static void bluetoothFunction() {
                 {
                     Serial.println("Bluetooth authentication timeout.");
                 }
+                BLESAuthNum.setValue("Timeout");
+                delay(100);
                 central.disconnect();
             }
             // if authentication characteristic has value, verify authentication
@@ -122,6 +265,7 @@ static void bluetoothFunction() {
                 }
             }
         }
+        resetTokenTimer();
             
     }
     else
@@ -131,11 +275,30 @@ static void bluetoothFunction() {
         {
             bluetoothConnected = false;
             bluetoothAuthenticated = false;
+            recording = 0;
+            record_ready = false; 
             if (Debug_Status != 0)
             {
                 Serial.print("Bluetooth disconnected from device ");
                 Serial.println(central.address());
             }
+        }
+    }
+}
+
+static void resetTokenTimer()
+{
+    if (TokenModifyToken) 
+    {
+        unsigned long TokenTimerNow = millis();
+        if (TokenTimerNow - BLETimer >= Modify_Token_Time_Out)
+        {
+            if (Debug_Status != 0)
+            {
+                Serial.println("Modify token timeout.");
+            }
+            TokenModifyToken = false;
+            DeviceToken.setValue("Timeout");
         }
     }
 }
