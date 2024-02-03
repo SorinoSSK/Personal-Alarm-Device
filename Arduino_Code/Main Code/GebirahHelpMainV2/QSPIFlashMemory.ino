@@ -292,3 +292,84 @@ static void resetMemory()
     jsonData["EmergencyNo"] = EmergencyNoArr;
     storeJSONToMemory();
 }
+
+static void QSPIInit()
+{
+    if (QSPI_Initialise() != NRFX_SUCCESS)
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("QSPI Memory failed to start!");
+        }
+      }
+    else
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("QSPI initialised and ready!");
+        }
+    }
+}
+
+static void QSPIMemoryCheck()
+{
+    // Wait for Memory to be ready for reading
+    QSPI_WaitForReady();
+    Error_Code = nrfx_qspi_read(pBuf, MemToUse, 0x0);
+    // Wait for Memory to be ready after reading
+    QSPI_WaitForReady();
+    // If Error Code is 0 do work, else throw an error and proceed
+    if (Error_Code == 0)
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("Initialising Data...");
+        }
+        // DeserializationError error = deserializeJson(jsonData, (char *)&pBuf);
+        DeserializationError error = deserializeJson(jsonData, uint16ToString(pBuf));
+        // Check if data is in JSON format. If not then attempt to override with one.
+        if (error)
+        {
+            // Print Error
+            if (Debug_Status != 0)
+            {
+                Serial.print(F("JSON deserialisation failed: "));
+                Serial.println(error.f_str());
+            }
+            // If Debugging mode, turn on full print.
+            if (Debug_Status == 2)
+            {
+                Serial.println(F("Reading stored data..."));
+                QSPI_PrintDataChar(&pBuf[0]);
+            }
+            // Initialise JSON and write it into JSON string
+            if (Debug_Status != 0)
+            {
+                Serial.println(F("Replacing JSON and writing into memory..."));
+            }
+            resetMemory();
+        }
+        else
+        {
+            // If successful, print ok.
+            if (Debug_Status != 0)
+            {
+                Serial.println("Data in memory is normal!");
+            }
+            // If debug, print JSON string
+            if (Debug_Status == 2)
+            {
+                String jsonString;
+                serializeJson(jsonData, jsonString);
+                Serial.println(jsonString);
+            }
+        }
+    }
+    else
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("Error reading from Flash Memory! Skipping memory...");
+        }
+    }
+}

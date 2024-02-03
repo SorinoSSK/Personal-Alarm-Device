@@ -302,3 +302,51 @@ static void resetTokenTimer()
         }
     }
 }
+
+static void BLEInit()
+{
+    // Wait for BLE to startup
+    if (!BLE.begin())
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("Starting Bluetooth® Low Energy module failed!");
+        }
+        while (1);
+    }
+    if (Debug_Status != 0)
+    {
+        Serial.println("Started Bluetooth® Low Energy module!");
+    }
+
+    // Set BLE name
+    BLE.setLocalName("Gebirah-Help");
+    BLE.setDeviceName("P-Alarm-Device");
+    // Set the advertised service
+    BLE.setAdvertisedService(myService);
+
+    // Add the service (with its characteristics) to the BLE server
+    myService.addCharacteristic(BLESAuthNum);
+    myService.addCharacteristic(EmergencyNo);
+    myService.addCharacteristic(getPDMSmple);
+    myService.addCharacteristic(PDMsMicRecs);
+    myService.addCharacteristic(getDvStatus);
+    myService.addCharacteristic(DeviceToken);
+    myService.addCharacteristic(BtnCodeSend);    
+
+    Serial.println(BLESAuthNum.valueSize());
+    Serial.println(EmergencyNo.valueSize());
+    Serial.println(getPDMSmple.valueSize());
+    Serial.println(PDMsMicRecs.valueSize());
+    Serial.println(getDvStatus.valueSize());
+    Serial.println(DeviceToken.valueSize());
+    Serial.println(BtnCodeSend.valueSize());
+
+    BLE.addService(myService);
+    // Start advertising the device
+    BLE.advertise();
+    if (Debug_Status != 0)
+    {
+        Serial.println("BLE server is up and advertising!");
+    }
+}

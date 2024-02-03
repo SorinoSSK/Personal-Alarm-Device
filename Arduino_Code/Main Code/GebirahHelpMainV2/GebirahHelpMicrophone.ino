@@ -32,6 +32,30 @@ static void audio_rec_callback(uint16_t *buf, uint32_t buf_len)
     }
 }
 
+static void MICInit1()
+{
+    #if defined(WIO_TERMINAL)
+        pinMode(WIO_KEY_A, INPUT_PULLUP);
+    #endif
+    Mic.set_callback(audio_rec_callback);
+}
+
+static void MICInit2()
+{
+    if (!Mic.begin()) 
+    {
+        if (Debug_Status != 0)
+        {
+            Serial.println("Starting PDM MIC failed!");
+        }
+        while (1);
+    }
+    if (Debug_Status != 0)
+    {
+        Serial.println("Started PDM MIC!");
+    }
+}
+
 // void microphoneFunction()
 // {
 //     if (samplesRead) 
