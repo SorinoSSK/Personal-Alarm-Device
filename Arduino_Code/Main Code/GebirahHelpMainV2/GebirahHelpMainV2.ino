@@ -76,19 +76,24 @@ FilterBuHp filter;
 #endif
 
 // ===== Battery Settings ===== //
-#define BAT_READ 14
+#define VBAT_ENABLE         14  // 
+#define BAT_HIGH_CHARGE     22  // HIGH for 50mA, LOW for 100mA
+#define BAT_CHARGE_STATE    23  // LOW for charging, HIGH not charging
+#define ADC_Vref            3.3
+uint8_t chargeState     = 0;
+long    batteryReadTime = 0;
 
 // ===== Device Button Settings ===== //
-uint8_t FirstBtnPin = 0;
-bool FirstBtnStatus = false;
+uint8_t FirstBtnPin     = 0;
+bool FirstBtnStatus     = false;
 bool FirstBtnFirstPress = false;
 bool FirstBtnRlseStatus = false;
-long FirstBtnTimer = 0;
-uint8_t SeconBtnPin = 1;
-bool SeconBtnStatus = false;
+long FirstBtnTimer      = 0;
+uint8_t SeconBtnPin     = 1;
+bool SeconBtnStatus     = false;
 bool SeconBtnFirstPress = false;
 bool SeconBtnRlseStatus = false;
-long SeconBtnTimer = 0;
+long SeconBtnTimer      = 0;
 
 // ===== Other Settings ===== //
 DynamicJsonDocument jsonData(MemToUse);
@@ -135,6 +140,8 @@ void setup()
     {
         Serial.println("Starting Device...");
     }
+    // Initialise Battery's Pin
+    initBattery();
     // Setup Microphone (PDM)
     MICInit1();
     // Set Battery current
@@ -156,12 +163,14 @@ void loop()
 {
     readAllPins();
     bluetoothFunction();
-    IMUFunction();
+    // IMUFunction();
     if (resetDevice)
     {
         resetMemory();
         resetDevice = false;
     }
+    CheckBatteryChargingState();
+    readBattery();
 }
 
 static void readAllPins()

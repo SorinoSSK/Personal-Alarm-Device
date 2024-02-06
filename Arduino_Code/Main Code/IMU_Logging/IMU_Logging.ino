@@ -27,6 +27,7 @@ bool    centralDisconnected = false;
 long    StartTimestamp = 0;
 
 void setup() {
+    pinMode(LED_GREEN, OUTPUT);
     // Begin serial communication and wait for serial communication
     Serial.begin(9600);
     // while (!Serial);
@@ -67,6 +68,7 @@ void setup() {
     // Start advertising the device
     BLE.advertise();
     Serial.println("BLE server is up and advertising!");
+    digitalWrite(LED_GREEN, HIGH);   
 }
 
 void loop() {
