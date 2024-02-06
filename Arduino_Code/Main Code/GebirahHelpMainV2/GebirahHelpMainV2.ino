@@ -40,6 +40,7 @@ static uint16_t pBuf[MemToUse / 2]  = {0};
 static uint32_t *BufMem             = (uint32_t *)&pBuf;
 
 // ===== IMU Settings ===== //
+#define CONVERT_G_TO_MS2 9.80665f
 LSM6DS3 myIMU(I2C_MODE, 0x6A);      // I2C device address 0x6A
 
 // ===== PDM Settings ===== //
@@ -155,6 +156,7 @@ void loop()
 {
     readAllPins();
     bluetoothFunction();
+    IMUFunction();
     if (resetDevice)
     {
         resetMemory();
