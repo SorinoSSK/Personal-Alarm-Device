@@ -221,6 +221,8 @@ static void bluetoothFunction() {
                 }
                 record_ready = false; 
             }
+            readBatteryBluetooth();
+            CheckBatteryChargingStateBluetooth();
         }
         // if bluetooth is not authenticated, wait for authentication
         // disconnect bluetooth on timeout
@@ -332,15 +334,17 @@ static void BLEInit()
     myService.addCharacteristic(PDMsMicRecs);
     myService.addCharacteristic(getDvStatus);
     myService.addCharacteristic(DeviceToken);
-    myService.addCharacteristic(BtnCodeSend);    
+    myService.addCharacteristic(BtnCodeSend);
+    myService.addCharacteristic(BatteryStat);
+    myService.addCharacteristic(BatCharStat);
 
-    Serial.println(BLESAuthNum.valueSize());
-    Serial.println(EmergencyNo.valueSize());
-    Serial.println(getPDMSmple.valueSize());
-    Serial.println(PDMsMicRecs.valueSize());
-    Serial.println(getDvStatus.valueSize());
-    Serial.println(DeviceToken.valueSize());
-    Serial.println(BtnCodeSend.valueSize());
+    // Serial.println(BLESAuthNum.valueSize());
+    // Serial.println(EmergencyNo.valueSize());
+    // Serial.println(getPDMSmple.valueSize());
+    // Serial.println(PDMsMicRecs.valueSize());
+    // Serial.println(getDvStatus.valueSize());
+    // Serial.println(DeviceToken.valueSize());
+    // Serial.println(BtnCodeSend.valueSize());
 
     BLE.addService(myService);
     // Start advertising the device

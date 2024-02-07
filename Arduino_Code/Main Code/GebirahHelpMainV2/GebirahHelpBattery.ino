@@ -3,7 +3,14 @@ static void initBattery()
     chargeState = isCharging();
     pinMode(VBAT_ENABLE, OUTPUT);
     pinMode(BAT_CHARGE_STATE, INPUT);
-    digitalWrite(BAT_HIGH_CHARGE, HIGH); // charge with 50mA
+    if (fastCharging)
+    {
+        digitalWrite(BAT_HIGH_CHARGE, LOW); // charge with 50mA
+    }
+    else
+    {
+        digitalWrite(BAT_HIGH_CHARGE, HIGH); // charge with 50mA
+    }
 }
 
 static bool isCharging()
@@ -28,14 +35,41 @@ static void CheckBatteryChargingState()
     }
 }
 
+// DO NOT use together with CheckBatteryChargingState()
+static void CheckBatteryChargingStateBluetooth()
+{
+    bool newChargeState = isCharging();
+    if (newChargeState != chargeState)
+    {
+        chargeState = newChargeState;
+        if (newChargeState)
+        {
+            if (Debug_Status != 0)
+            {
+                Serial.println("Charging Battery");
+            }
+            BatCharStat.setValue("Charging");
+        }
+        else
+        {
+            if (Debug_Status != 0)
+            {
+                Serial.println("Battery Stopped Charging");
+            }
+            BatCharStat.setValue("Discharging");
+        }
+    }
+}
+
 static float getBatteryVoltage()
 {
     digitalWrite(VBAT_ENABLE, LOW);
 
     uint32_t adcCount = analogRead(PIN_VBAT);
     float adcVoltage = adcCount * ADC_Vref/1024;
-    float vBat = adcVoltage * (1510.0 / 510.0);
-
+    float vBat = adcVoltage * ((Voltage_Div_Num + Voltage_Div_Offset) / Voltage_Div_Den);
+    // Serial.print(analogRead(PIN_VBAT));
+    // Serial.print(" ");
     digitalWrite(VBAT_ENABLE, HIGH);
 
     return vBat;
@@ -46,8 +80,45 @@ static float readBattery()
     long newBatteryReadTime = millis();
     if (newBatteryReadTime - batteryReadTime >= 1000)
     {
-        Serial.print(analogRead(PIN_VBAT));
-        Serial.println(getBatteryVoltage());
+        // if (Debug_Status != 0)
+        // {
+        //     Serial.println(getBatteryVoltage());
+        // }
         batteryReadTime = millis();
+        if (returnPercentage)
+        {
+            return map(getBatteryVoltage(), 3.7, 4.2, 0, 100);
+        }
+        else
+        {
+            return getBatteryVoltage();
+        }
+    }
+}
+
+// DO NOT use together with readBattery()
+static void readBatteryBluetooth()
+{
+    long newBatteryReadTime = millis();
+    if (newBatteryReadTime - batteryReadTime >= 1000)
+    {
+        // if (Debug_Status != 0)
+        // {
+        //     Serial.println(getBatteryVoltage());
+        // }
+        batteryReadTime = millis();
+        float batteryVoltage = getBatteryVoltage();
+        if (returnPercentage)
+        {
+            Serial.println(batteryVoltage*10);
+            Serial.print(" ");
+            Serial.println(map(round(batteryVoltage*10), 37, 42, 0, 100));
+            BatteryStat.setValue(String(map(round(batteryVoltage*10), 37, 42, 0, 100)));
+        }
+        else
+        {
+            // Serial.println(String(batteryVoltage));
+            BatteryStat.setValue(String(batteryVoltage));
+        }
     }
 }

@@ -8,13 +8,16 @@
 BLEService myService("00001811-0000-1000-8000-00805F9B34FB");
 // Set BLE to read and write (When phone is unlocked), and notify (when phone is on locked)
 
-BLEStringCharacteristic FloatAccelX  ("00001811-0000-1000-8000-00805F9B34E1", BLEWrite | BLENotify, 20);
-BLEStringCharacteristic FloatAccelY  ("00001811-0000-1000-8000-00805F9B34E2", BLEWrite | BLENotify, 20);
-BLEStringCharacteristic FloatAccelZ  ("00001811-0000-1000-8000-00805F9B34E3", BLEWrite | BLENotify, 20);
-BLEStringCharacteristic FloatGyroX   ("00001811-0000-1000-8000-00805F9B34E4", BLEWrite | BLENotify, 20);
-BLEStringCharacteristic FloatGyroY   ("00001811-0000-1000-8000-00805F9B34E5", BLEWrite | BLENotify, 20);
-BLEStringCharacteristic FloatGyroZ   ("00001811-0000-1000-8000-00805F9B34E6", BLEWrite | BLENotify, 20);
-BLEStringCharacteristic TempC        ("00001811-0000-1000-8000-00805F9B34E7", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic FloatAccelX  ("00001811-0000-1000-8000-00805F9B34E1", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic FloatAccelY  ("00001811-0000-1000-8000-00805F9B34E2", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic FloatAccelZ  ("00001811-0000-1000-8000-00805F9B34E3", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic FloatGyroX   ("00001811-0000-1000-8000-00805F9B34E4", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic FloatGyroY   ("00001811-0000-1000-8000-00805F9B34E5", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic FloatGyroZ   ("00001811-0000-1000-8000-00805F9B34E6", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic TempC        ("00001811-0000-1000-8000-00805F9B34E7", BLEWrite | BLENotify, 20);
+
+BLEStringCharacteristic Accel   ("00001811-0000-1000-8000-00805F9B34E1", BLEWrite | BLENotify, 20);
+// BLEStringCharacteristic Gyros   ("00001811-0000-1000-8000-00805F9B34E2", BLEWrite | BLENotify, 20);
 
 // BLEStringCharacteristic UserName     ("00001811-0000-1000-8000-00805F9B34F8", BLERead | BLEWrite | BLENotify, 20);
 // BLEStringCharacteristic UserAge      ("00001811-0000-1000-8000-00805F9B34F9", BLERead | BLEWrite | BLENotify, 20);
@@ -53,13 +56,16 @@ void setup() {
     // Set the advertised service
     BLE.setAdvertisedService(myService);
 
-    myService.addCharacteristic(FloatAccelX);
-    myService.addCharacteristic(FloatAccelY);
-    myService.addCharacteristic(FloatAccelZ);
-    myService.addCharacteristic(FloatGyroX);
-    myService.addCharacteristic(FloatGyroY);
-    myService.addCharacteristic(FloatGyroZ);
-    myService.addCharacteristic(TempC);    
+    // myService.addCharacteristic(FloatAccelX);
+    // myService.addCharacteristic(FloatAccelY);
+    // myService.addCharacteristic(FloatAccelZ);
+    // myService.addCharacteristic(FloatGyroX);
+    // myService.addCharacteristic(FloatGyroY);
+    // myService.addCharacteristic(FloatGyroZ);
+    // myService.addCharacteristic(TempC);    
+    myService.addCharacteristic(Accel);
+    // myService.addCharacteristic(Gyros);
+
 
     // myService.addCharacteristic(UserName);    
 
@@ -91,13 +97,15 @@ void loop() {
         if (timestamp - StartTimestamp >= 10)
         {
             // Your custom logic here
-            FloatAccelX.setValue(String(timestamp) + "," + String(myIMU.readFloatAccelX()));
-            FloatAccelY.setValue(String(timestamp) + "," + String(myIMU.readFloatAccelY()));
-            FloatAccelZ.setValue(String(timestamp) + "," + String(myIMU.readFloatAccelZ()));
-            FloatGyroX.setValue(String(timestamp) + "," + String(myIMU.readFloatGyroX()));
-            FloatGyroY.setValue(String(timestamp) + "," + String(myIMU.readFloatGyroY()));
-            FloatGyroZ.setValue(String(timestamp) + "," + String(myIMU.readFloatGyroZ()));
-            TempC.setValue(String(timestamp) + "," + String(myIMU.readTempC()));
+            // FloatAccelX.setValue(String(timestamp) + "," + String(myIMU.readFloatAccelX()));
+            // FloatAccelY.setValue(String(timestamp) + "," + String(myIMU.readFloatAccelY()));
+            // FloatAccelZ.setValue(String(timestamp) + "," + String(myIMU.readFloatAccelZ()));
+            // FloatGyroX.setValue(String(timestamp) + "," + String(myIMU.readFloatGyroX()));
+            // FloatGyroY.setValue(String(timestamp) + "," + String(myIMU.readFloatGyroY()));
+            // FloatGyroZ.setValue(String(timestamp) + "," + String(myIMU.readFloatGyroZ()));
+            // TempC.setValue(String(timestamp) + "," + String(myIMU.readTempC()));
+            Accel.setValue(String(myIMU.readFloatAccelX()) + "," + String(myIMU.readFloatAccelY()) + "," + String(myIMU.readFloatAccelZ()));
+            // Gyros.setValue(String(myIMU.readFloatGyroX()) + "," + String(myIMU.readFloatGyroY()) + "," + String(myIMU.readFloatGyroZ()));
             StartTimestamp = millis();
         }
     }

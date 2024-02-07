@@ -76,10 +76,13 @@ FilterBuHp filter;
 #endif
 
 // ===== Battery Settings ===== //
-#define VBAT_ENABLE         14  // 
+#define VBAT_ENABLE         P0_14  // 
 #define BAT_HIGH_CHARGE     22  // HIGH for 50mA, LOW for 100mA
 #define BAT_CHARGE_STATE    23  // LOW for charging, HIGH not charging
 #define ADC_Vref            3.3
+#define Voltage_Div_Num     1510.0
+#define Voltage_Div_Den     510.0
+#define Voltage_Div_Offset  60.4
 uint8_t chargeState     = 0;
 long    batteryReadTime = 0;
 
@@ -106,9 +109,11 @@ bool TokenModifyToken = false;
 unsigned long BLETimer = millis();
 
 // ===== Modifiable Settings ===== //
-uint16_t Debug_Status       = 2;
-uint16_t Bluetooth_Time_Out = 30*1000;
-uint16_t Modify_Token_Time_Out = 30*1000;
+bool fastCharging               = true;
+bool returnPercentage           = true;
+uint16_t Debug_Status           = 2;
+uint16_t Bluetooth_Time_Out     = 30*1000;
+uint16_t Modify_Token_Time_Out  = 30*1000;
 
 // ===== Bluetooh Settings ===== //
 // UUID for Alert Notification Service
@@ -120,6 +125,8 @@ BLEStringCharacteristic getPDMSmple("00001811-0000-1000-8000-00805F9B34F2", BLER
 BLEStringCharacteristic getDvStatus("00001811-0000-1000-8000-00805F9B34F4", BLERead | BLEWrite | BLENotify, 25);
 BLEStringCharacteristic DeviceToken("00001811-0000-1000-8000-00805F9B34F5", BLERead | BLEWrite | BLENotify, 100);
 BLEStringCharacteristic BtnCodeSend("00001811-0000-1000-8000-00805F9B34F6", BLERead | BLENotify, 100);
+BLEStringCharacteristic BatteryStat("00001811-0000-1000-8000-00805F9B34F7", BLERead | BLENotify, 100);
+BLEStringCharacteristic BatCharStat("00001811-0000-1000-8000-00805F9B34F8", BLERead | BLENotify, 100);
 
 BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , mic_config.buf_size);
 
@@ -157,6 +164,10 @@ void setup()
     // Read from memory and initialise device
     // Else overwrite with default
     QSPIMemoryCheck();
+    if (Debug_Status != 0)
+    {
+        Serial.println("Device finish setting up...");
+    }
 }
 
 void loop()
@@ -169,8 +180,9 @@ void loop()
         resetMemory();
         resetDevice = false;
     }
-    CheckBatteryChargingState();
-    readBattery();
+
+    // CheckBatteryChargingState();
+    // readBattery();
 }
 
 static void readAllPins()
