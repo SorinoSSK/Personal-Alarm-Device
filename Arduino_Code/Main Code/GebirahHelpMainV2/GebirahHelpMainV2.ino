@@ -19,6 +19,11 @@
 #include "processing/filters.h"             // Used for Microphone (PDM) Sampling
 #endif
 
+// ===== LED Settings ===== //
+String statusForLED = "";
+long LEDTimer       = 0;
+bool LEDToReset     = false;
+
 // ===== QSPI Settings ===== //
 #define QSPI_STD_CMD_WRSR   0x01
 #define QSPI_STD_CMD_RSTEN  0x66
@@ -59,7 +64,8 @@ mic_config_t mic_config{
     .debug_pin = 1                  // Toggles each DAC ISR (if DEBUG is set to 1)
     #elif defined(ARDUINO_ARCH_NRF52840)
     .buf_size = 1600,
-    .debug_pin = LED_BUILTIN        // Toggles each DAC ISR (if DEBUG is set to 1)
+    .debug_pin = 1
+    // .debug_pin = LED_BUILTIN        // Toggles each DAC ISR (if DEBUG is set to 1)
     #endif
 };
 #if defined(WIO_TERMINAL)
@@ -82,9 +88,18 @@ FilterBuHp filter;
 #define ADC_Vref            3.3
 #define Voltage_Div_Num     1510.0
 #define Voltage_Div_Den     510.0
-#define Voltage_Div_Offset  60.4
+#define Voltage_Div_Offset  60.3
 uint8_t chargeState     = 0;
 long    batteryReadTime = 0;
+
+// ===== Battery Kalman Filter ===== //
+double estBatteryVal    = 0.0;   // x - Initial Guess
+double estBatteryF      = 1.0;   // F - Only 1 Sensor
+double estBatteryH      = 1.0;   // H - Only 1 Measurement Value
+double estBatteryQ      = 0.1;          // Q - Near Calculated Value?
+double estBatteryR      = 0.00001;      // R - Near Computation
+double estBatteryKal    = 0.0;   // K
+double estBatteryP      = 1.0;   // P
 
 // ===== Device Button Settings ===== //
 uint8_t FirstBtnPin     = 0;
@@ -111,7 +126,7 @@ unsigned long BLETimer = millis();
 // ===== Modifiable Settings ===== //
 bool fastCharging               = true;
 bool returnPercentage           = true;
-uint16_t Debug_Status           = 2;
+uint16_t Debug_Status           = 0;
 uint16_t Bluetooth_Time_Out     = 30*1000;
 uint16_t Modify_Token_Time_Out  = 30*1000;
 
@@ -147,6 +162,8 @@ void setup()
     {
         Serial.println("Starting Device...");
     }
+    // Initialise LED pin
+    initLED();
     // Initialise Battery's Pin
     initBattery();
     // Setup Microphone (PDM)
@@ -168,6 +185,7 @@ void setup()
     {
         Serial.println("Device finish setting up...");
     }
+    statusForLED = "completeSetup";
 }
 
 void loop()
@@ -180,7 +198,7 @@ void loop()
         resetMemory();
         resetDevice = false;
     }
-
+    runLED();
     // CheckBatteryChargingState();
     // readBattery();
 }

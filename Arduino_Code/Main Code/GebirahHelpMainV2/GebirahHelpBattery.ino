@@ -110,10 +110,12 @@ static void readBatteryBluetooth()
         float batteryVoltage = getBatteryVoltage();
         if (returnPercentage)
         {
-            Serial.println(batteryVoltage*10);
-            Serial.print(" ");
-            Serial.println(map(round(batteryVoltage*10), 37, 42, 0, 100));
-            BatteryStat.setValue(String(map(round(batteryVoltage*10), 37, 42, 0, 100)));
+            // Serial.print(batteryVoltage);
+            // Serial.print(" ");
+            // Serial.print(SOCKalmanFilter(batteryVoltage));
+            // Serial.print(" ");
+            // Serial.println(map(round(batteryLimit(batteryVoltage)*10.0), 37, 42, 0, 100));
+            BatteryStat.setValue(String(map(round(batteryLimit(SOCKalmanFilter(batteryVoltage))*100.0), 370, 420, 0, 100)));
         }
         else
         {
@@ -121,4 +123,21 @@ static void readBatteryBluetooth()
             BatteryStat.setValue(String(batteryVoltage));
         }
     }
+}
+
+static float batteryLimit(float value) 
+{
+    if (value > 4.2)
+    {
+        return 4.2;
+    }
+    else if (value < 3.7)
+    {
+        return 3.7;
+    }
+    else
+    {
+        return value;
+    }
+
 }
