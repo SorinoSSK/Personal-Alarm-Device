@@ -89,17 +89,22 @@ FilterBuHp filter;
 #define Voltage_Div_Num     1510.0
 #define Voltage_Div_Den     510.0
 #define Voltage_Div_Offset  60.3
-uint8_t chargeState     = 0;
-long    batteryReadTime = 0;
+const int sizeOfFilter      = 10;
+uint8_t chargeState         = 0;
+long    batteryReadTime     = 0;
+int     filterCnt           = 0;
+float   pastBattVoltage[sizeOfFilter] = {0};
+float   BatteryVoltage      = 0;
+bool    BatteryReadingRdy   = false;
 
-// ===== Battery Kalman Filter ===== //
-double estBatteryVal    = 0.0;   // x - Initial Guess
-double estBatteryF      = 1.0;   // F - Only 1 Sensor
-double estBatteryH      = 1.0;   // H - Only 1 Measurement Value
-double estBatteryQ      = 0.1;          // Q - Near Calculated Value?
-double estBatteryR      = 0.00001;      // R - Near Computation
-double estBatteryKal    = 0.0;   // K
-double estBatteryP      = 1.0;   // P
+// // ===== Battery Kalman Filter ===== //
+// double estBatteryVal    = 0.0;   // x - Initial Guess
+// double estBatteryF      = 1.0;   // F - Only 1 Sensor
+// double estBatteryH      = 1.0;   // H - Only 1 Measurement Value
+// double estBatteryQ      = 0.1;          // Q - Near Calculated Value?
+// double estBatteryR      = 0.00001;      // R - Near Computation
+// double estBatteryKal    = 0.0;   // K
+// double estBatteryP      = 1.0;   // P
 
 // ===== Device Button Settings ===== //
 uint8_t FirstBtnPin     = 0;
@@ -124,6 +129,7 @@ bool TokenModifyToken = false;
 unsigned long BLETimer = millis();
 
 // ===== Modifiable Settings ===== //
+bool AdminMode                  = false;
 bool fastCharging               = true;
 bool returnPercentage           = true;
 uint16_t Debug_Status           = 0;
@@ -142,6 +148,7 @@ BLEStringCharacteristic DeviceToken("00001811-0000-1000-8000-00805F9B34F5", BLER
 BLEStringCharacteristic BtnCodeSend("00001811-0000-1000-8000-00805F9B34F6", BLERead | BLENotify, 100);
 BLEStringCharacteristic BatteryStat("00001811-0000-1000-8000-00805F9B34F7", BLERead | BLENotify, 100);
 BLEStringCharacteristic BatCharStat("00001811-0000-1000-8000-00805F9B34F8", BLERead | BLENotify, 100);
+BLEStringCharacteristic AdminComman("00001811-0000-1000-8000-00805F9B34F9", BLERead | BLEWrite | BLENotify, 100);
 
 BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , mic_config.buf_size);
 
@@ -199,8 +206,7 @@ void loop()
         resetDevice = false;
     }
     runLED();
-    // CheckBatteryChargingState();
-    // readBattery();
+    runBattery();
 }
 
 static void readAllPins()

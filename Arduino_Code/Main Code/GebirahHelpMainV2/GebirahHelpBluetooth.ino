@@ -42,7 +42,15 @@ static void bluetoothFunction() {
                         Serial.print("IMU - ");
                         Serial.println(String(myIMU.begin() == 0));
                     }
-                    getDvStatus.setValue(String(myIMU.begin() == 0));
+                    if (myIMU.begin() == 0)
+                    {
+                        getDvStatus.setValue(String("OK!"));
+                    }
+                    else
+                    {
+                        getDvStatus.setValue(String("FAILED!"));
+                    }
+                    
                 }
                 else if (String(getDvStatus.value()) == "getLEDStatus")
                 {
@@ -51,7 +59,7 @@ static void bluetoothFunction() {
                         Serial.print("LED - ");
                         Serial.println("verify light");
                     }
-                    getDvStatus.setValue("1");
+                    getDvStatus.setValue("OK!");
                 }
                 else if (String(getDvStatus.value()) == "getBuzzerStatus")
                 {
@@ -60,7 +68,7 @@ static void bluetoothFunction() {
                         Serial.print("Buzzer - ");
                         Serial.println("verify sound");
                     }
-                    getDvStatus.setValue("1");
+                    getDvStatus.setValue("OK!");
                 }
                 else if (String(getDvStatus.value()) == "getMICStatus")
                 {
@@ -69,7 +77,14 @@ static void bluetoothFunction() {
                         Serial.print("MIC - ");
                         Serial.println(String(Mic.begin()));
                     }
-                    getDvStatus.setValue(String(Mic.begin()));
+                    if (Mic.begin())
+                    {
+                        getDvStatus.setValue(String("OK!"));
+                    }
+                    else
+                    {
+                        getDvStatus.setValue(String("FAILED!"));
+                    }
                 }
                 else if (String(getDvStatus.value()) == "getQSPIStatus")
                 {
@@ -78,7 +93,26 @@ static void bluetoothFunction() {
                         Serial.print("QSPI - ");
                         Serial.println(String(QSPI_IsReady() == NRFX_SUCCESS));
                     }
-                    getDvStatus.setValue(String(QSPI_IsReady() == NRFX_SUCCESS));
+                    if (QSPI_IsReady() == NRFX_SUCCESS)
+                    {
+                        getDvStatus.setValue(String("OK!"));
+                    }
+                    else
+                    {
+                        getDvStatus.setValue(String("FAILED!"));
+                    }
+                }
+                else if (String(getDvStatus.value()) == "getChargingStatus")
+                {
+                    getDvStatus.setValue(String("OK!"));
+                    if(chargeState)
+                    {
+                        BatCharStat.setValue("CHARGING");
+                    }
+                    else
+                    {
+                        BatCharStat.setValue("DISCHARGING");
+                    }
                 }
                 else
                 {
@@ -86,7 +120,7 @@ static void bluetoothFunction() {
                     {
                         Serial.println("Invalid device.");
                     }
-                    getDvStatus.setValue("Invalid device.");
+                    getDvStatus.setValue("INVALID DEVICE!");
                 }
             }
             if (DeviceToken.written())
@@ -103,7 +137,7 @@ static void bluetoothFunction() {
                         {
                             Serial.println("Reset token verified.");
                         }
-                        DeviceToken.setValue("Reset verified.");
+                        DeviceToken.setValue("TOKEN OK!");
                         TokenModifyToken = true;
                         BLETimer = millis();
                     }
@@ -113,7 +147,7 @@ static void bluetoothFunction() {
                         {
                             Serial.println("Invalid reset token.");
                         }
-                        DeviceToken.setValue("Invalid reset token");
+                        DeviceToken.setValue("TOKEN FAILED!");
                     }
                 }
                 else
@@ -126,7 +160,7 @@ static void bluetoothFunction() {
                         {
                             Serial.println("Token modified.");
                         }
-                        DeviceToken.setValue("Token modified.");
+                        DeviceToken.setValue("MODIFIED OK!");
                         TokenModifyToken = false;
                     }
                     else
@@ -135,7 +169,7 @@ static void bluetoothFunction() {
                         {
                             Serial.println("Invalid token length.");
                         }
-                        DeviceToken.setValue("Invalid token length.");
+                        DeviceToken.setValue("TOKEN LENGTH FAILED!");
                     }
                 }
             }
@@ -150,18 +184,18 @@ static void bluetoothFunction() {
                     Serial.println("steaming samples.");
                     recording = 1;
                     record_ready = false;  
-                    getPDMSmple.setValue("Streaming samples");
+                    getPDMSmple.setValue("STREAMING OK!");
                 }
                 else if (String(getPDMSmple.value()) == "stopSamples")
                 {
                     Serial.println("stop steaming.");
                     stop_record = true;  
-                    getPDMSmple.setValue("Stop streaming");
+                    getPDMSmple.setValue("STREAMING STOP!");
                 }
                 else
                 {
                     getPDMSmple.setValue("Invalid command");
-                    Serial.println("Invalid command.");
+                    Serial.println("INVALID COMMAND!");
                 }
             }
             if (EmergencyNo.written())
@@ -179,7 +213,7 @@ static void bluetoothFunction() {
                     {
                         Serial.println("Invalid list format!");
                     }
-                    EmergencyNo.setValue("Invalid list format!");
+                    EmergencyNo.setValue("LIST FORMAT INVALID!");
                 }
                 else
                 {
@@ -189,8 +223,58 @@ static void bluetoothFunction() {
                     {
                         Serial.println("Emergency list set!");
                     }
-                    EmergencyNo.setValue("Emergency list set!");
+                    EmergencyNo.setValue("LIST OK!");
                 }
+            }
+            if (AdminComman.written())
+            {
+                if (AdminComman.value() == "SysAdmin")
+                {
+                    AdminMode = !AdminMode;
+                    AdminComman.setValue("OK!");
+                }
+                else if (AdminMode)
+                {
+                    String rtnVal = "OK!";
+                    if (AdminComman.value() == "EnDebug0")
+                    {
+                        Debug_Status = 0;
+                    }
+                    else if (AdminComman.value() == "EnDebug1")
+                    {
+                        Debug_Status = 1;
+                    }
+                    else if (AdminComman.value() == "EnDebug2")
+                    {
+                        Debug_Status = 2;
+                    }
+                    else if (AdminComman.value() == "BatteryVoltage")
+                    {
+                        returnPercentage = false;
+                    }
+                    else if (AdminComman.value() == "BatteryPercentage")
+                    {
+                        returnPercentage = true;
+                    }
+                    else if (AdminComman.value() == "SlowCharging")
+                    {
+                        fastCharging = false;
+                    }
+                    else if (AdminComman.value() == "FastCharging")
+                    {
+                        fastCharging = true;
+                    }
+                    else
+                    {
+                        rtnVal = "FAILED!";
+                    }
+                    AdminComman.setValue(rtnVal);
+                }
+                else
+                {
+                    AdminComman.setValue("PERM FAILED!");
+                }
+                
             }
             // If any modification data is written, store to memory
             if (bluetoothModified)
@@ -221,8 +305,7 @@ static void bluetoothFunction() {
                 }
                 record_ready = false; 
             }
-            readBatteryBluetooth();
-            CheckBatteryChargingStateBluetooth();
+            broadcastBatteryBluetooth();
         }
         // if bluetooth is not authenticated, wait for authentication
         // disconnect bluetooth on timeout
@@ -236,7 +319,7 @@ static void bluetoothFunction() {
                 {
                     Serial.println("Bluetooth authentication timeout.");
                 }
-                BLESAuthNum.setValue("Timeout");
+                BLESAuthNum.setValue("TIMEOUT!");
                 delay(100);
                 central.disconnect();
             }
@@ -251,7 +334,7 @@ static void bluetoothFunction() {
                 if (jsonData["DeviceToken"] == String(BLESAuthNum.value()))
                 {
                     bluetoothAuthenticated = true;
-                    BLESAuthNum.setValue("Bluetooth Successful.");
+                    BLESAuthNum.setValue("BLUETOOTH OK!");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Successful.");
@@ -259,7 +342,7 @@ static void bluetoothFunction() {
                 }
                 else
                 {
-                    BLESAuthNum.setValue("Bluetooth Failed.");
+                    BLESAuthNum.setValue("BLUETOOTH FAILED!");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Failed.");
@@ -300,7 +383,7 @@ static void resetTokenTimer()
                 Serial.println("Modify token timeout.");
             }
             TokenModifyToken = false;
-            DeviceToken.setValue("Timeout");
+            DeviceToken.setValue("TIMEOUT!");
         }
     }
 }
@@ -337,6 +420,7 @@ static void BLEInit()
     myService.addCharacteristic(BtnCodeSend);
     myService.addCharacteristic(BatteryStat);
     myService.addCharacteristic(BatCharStat);
+    myService.addCharacteristic(AdminComman);
 
     // Serial.println(BLESAuthNum.valueSize());
     // Serial.println(EmergencyNo.valueSize());

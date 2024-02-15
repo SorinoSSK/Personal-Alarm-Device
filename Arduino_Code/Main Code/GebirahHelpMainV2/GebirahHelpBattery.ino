@@ -26,29 +26,14 @@ static void CheckBatteryChargingState()
         chargeState = newChargeState;
         if (newChargeState)
         {
-            Serial.println("Charging Battery");
-        }
-        else
-        {
-            Serial.println("Battery Stopped Charging");
-        }
-    }
-}
-
-// DO NOT use together with CheckBatteryChargingState()
-static void CheckBatteryChargingStateBluetooth()
-{
-    bool newChargeState = isCharging();
-    if (newChargeState != chargeState)
-    {
-        chargeState = newChargeState;
-        if (newChargeState)
-        {
             if (Debug_Status != 0)
             {
                 Serial.println("Charging Battery");
             }
-            BatCharStat.setValue("Charging");
+            if (bluetoothAuthenticated)
+            {
+                BatCharStat.setValue("CHARGING");
+            }
         }
         else
         {
@@ -56,7 +41,10 @@ static void CheckBatteryChargingStateBluetooth()
             {
                 Serial.println("Battery Stopped Charging");
             }
-            BatCharStat.setValue("Discharging");
+            if (bluetoothAuthenticated)
+            {
+                BatCharStat.setValue("DISCHARGING");
+            }
         }
     }
 }
@@ -80,34 +68,16 @@ static float readBattery()
     long newBatteryReadTime = millis();
     if (newBatteryReadTime - batteryReadTime >= 1000)
     {
-        // if (Debug_Status != 0)
-        // {
-        //     Serial.println(getBatteryVoltage());
-        // }
         batteryReadTime = millis();
-        if (returnPercentage)
-        {
-            return map(getBatteryVoltage(), 3.7, 4.2, 0, 100);
-        }
-        else
-        {
-            return getBatteryVoltage();
-        }
+        SOCMeanFilter(getBatteryVoltage());
+        BatteryReadingRdy = true;
     }
 }
 
-// DO NOT use together with readBattery()
-static void readBatteryBluetooth()
+static void broadcastBatteryBluetooth()
 {
-    long newBatteryReadTime = millis();
-    if (newBatteryReadTime - batteryReadTime >= 1000)
+    if (BatteryReadingRdy)
     {
-        // if (Debug_Status != 0)
-        // {
-        //     Serial.println(getBatteryVoltage());
-        // }
-        batteryReadTime = millis();
-        float batteryVoltage = getBatteryVoltage();
         if (returnPercentage)
         {
             // Serial.print(batteryVoltage);
@@ -115,13 +85,14 @@ static void readBatteryBluetooth()
             // Serial.print(SOCKalmanFilter(batteryVoltage));
             // Serial.print(" ");
             // Serial.println(map(round(batteryLimit(batteryVoltage)*10.0), 37, 42, 0, 100));
-            BatteryStat.setValue(String(map(round(batteryLimit(SOCKalmanFilter(batteryVoltage))*100.0), 370, 420, 0, 100)));
+            BatteryStat.setValue(String(map(round(batteryLimit(BatteryVoltage)*100.0), 370, 420, 0, 100)));
         }
         else
         {
             // Serial.println(String(batteryVoltage));
-            BatteryStat.setValue(String(batteryVoltage));
+            BatteryStat.setValue(String(batteryLimit(BatteryVoltage)));
         }
+        BatteryReadingRdy = false;
     }
 }
 
@@ -140,4 +111,10 @@ static float batteryLimit(float value)
         return value;
     }
 
+}
+
+static void runBattery()
+{
+    readBattery();
+    CheckBatteryChargingState();
 }
