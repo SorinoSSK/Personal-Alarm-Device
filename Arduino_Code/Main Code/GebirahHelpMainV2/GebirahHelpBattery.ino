@@ -98,13 +98,20 @@ static void broadcastBatteryBluetooth()
 
 static float batteryLimit(float value) 
 {
-    if (value > 4.2)
+    if (BatterySoftLimit)
     {
-        return 4.2;
-    }
-    else if (value < 3.7)
-    {
-        return 3.7;
+        if (value > 4.2)
+        {
+            return 4.2;
+        }
+        else if (value < 3.7)
+        {
+            return 3.7;
+        }
+        else
+        {
+            return value;
+        }
     }
     else
     {

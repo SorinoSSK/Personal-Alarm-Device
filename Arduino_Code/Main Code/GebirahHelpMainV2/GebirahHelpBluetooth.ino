@@ -231,6 +231,7 @@ static void bluetoothFunction() {
                 if (AdminComman.value() == "SysAdmin")
                 {
                     AdminMode = !AdminMode;
+                    sysAdminTimer = millis();
                     AdminComman.setValue("OK!");
                 }
                 else if (AdminMode)
@@ -264,10 +265,23 @@ static void bluetoothFunction() {
                     {
                         fastCharging = true;
                     }
+                    else if (AdminComman.value() == "ResetDevice")
+                    {
+                        resetDevice = true;
+                    }
+                    else if (AdminComman.value() == "BatteryUnbound")
+                    {
+                        BatterySoftLimit = false;
+                    }
+                    else if (AdminComman.value() == "BatteryBound")
+                    {
+                        BatterySoftLimit = true;
+                    }
                     else
                     {
                         rtnVal = "FAILED!";
                     }
+                    sysAdminTimer = millis();
                     AdminComman.setValue(rtnVal);
                 }
                 else
@@ -351,7 +365,7 @@ static void bluetoothFunction() {
             }
         }
         resetTokenTimer();
-            
+        resetAdminStatusTimer();
     }
     else
     {
@@ -384,6 +398,23 @@ static void resetTokenTimer()
             }
             TokenModifyToken = false;
             DeviceToken.setValue("TIMEOUT!");
+        }
+    }
+}
+
+static void resetAdminStatusTimer()
+{
+    if (AdminMode) 
+    {
+        unsigned long sysAdminTimerNow = millis();
+        if (sysAdminTimerNow - sysAdminTimer >= sysAdmin_Time_Out)
+        {
+            if (Debug_Status != 0)
+            {
+                Serial.println("SysAdmin status timeout.");
+            }
+            AdminMode = false;
+            AdminComman.setValue("SYSADMIN RESET!");
         }
     }
 }

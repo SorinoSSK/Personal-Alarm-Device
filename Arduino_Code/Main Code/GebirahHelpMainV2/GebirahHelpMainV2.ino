@@ -95,6 +95,7 @@ long    batteryReadTime     = 0;
 int     filterCnt           = 0;
 float   pastBattVoltage[sizeOfFilter] = {0};
 float   BatteryVoltage      = 0;
+bool    BatterySoftLimit    = true;
 bool    BatteryReadingRdy   = false;
 
 // // ===== Battery Kalman Filter ===== //
@@ -121,18 +122,20 @@ long SeconBtnTimer      = 0;
 // ===== Other Settings ===== //
 DynamicJsonDocument jsonData(MemToUse);
 uint32_t Error_Code;
-uint32_t NoOfEmergencyContact = JSON_ARRAY_SIZE(10);
-bool resetDevice = false;
-bool bluetoothConnected = false;
-bool bluetoothAuthenticated = false;
-bool TokenModifyToken = false;
-unsigned long BLETimer = millis();
+uint32_t NoOfEmergencyContact   = JSON_ARRAY_SIZE(10);
+bool resetDevice                = false;
+bool bluetoothConnected         = false;
+bool bluetoothAuthenticated     = false;
+bool TokenModifyToken           = false;
+unsigned long BLETimer          = millis();
+unsigned long sysAdminTimer     = millis();
 
 // ===== Modifiable Settings ===== //
 bool AdminMode                  = false;
 bool fastCharging               = true;
 bool returnPercentage           = true;
 uint16_t Debug_Status           = 0;
+uint16_t sysAdmin_Time_Out      = 60*60*1000;
 uint16_t Bluetooth_Time_Out     = 30*1000;
 uint16_t Modify_Token_Time_Out  = 30*1000;
 
