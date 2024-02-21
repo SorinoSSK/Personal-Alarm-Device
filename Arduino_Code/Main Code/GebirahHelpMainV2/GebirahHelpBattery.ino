@@ -85,7 +85,7 @@ static void broadcastBatteryBluetooth()
             // Serial.print(SOCKalmanFilter(batteryVoltage));
             // Serial.print(" ");
             // Serial.println(map(round(batteryLimit(batteryVoltage)*10.0), 37, 42, 0, 100));
-            BatteryStat.setValue(String(map(round(batteryLimit(BatteryVoltage)*100.0), 370, 420, 0, 100)));
+            BatteryStat.setValue(String(map(round(batteryLimit(BatteryVoltage)*100.0), 335, 420, 0, 100)));
         }
         else
         {
@@ -104,9 +104,9 @@ static float batteryLimit(float value)
         {
             return 4.2;
         }
-        else if (value < 3.7)
+        else if (value < 3.35)
         {
-            return 3.7;
+            return 3.35;
         }
         else
         {
