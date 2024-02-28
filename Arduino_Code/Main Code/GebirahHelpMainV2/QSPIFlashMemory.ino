@@ -291,6 +291,7 @@ static void resetMemory()
     jsonData["FastChargng"] = "1";
     jsonData["BattVoltage"] = "0";
     jsonData["BattBounded"] = "1";
+    jsonData["FallDetects"] = "1";
     DynamicJsonDocument doc(NoOfEmergencyContact);
     JsonArray EmergencyNoArr = doc.createNestedArray("EmergencyNoArr");
     jsonData["EmergencyNo"] = EmergencyNoArr;

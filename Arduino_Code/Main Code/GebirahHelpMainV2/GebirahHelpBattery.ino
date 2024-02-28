@@ -6,7 +6,7 @@ static void initBattery()
     // if (fastCharging)
     if (jsonData["FastChargng"] == "1")
     {
-        digitalWrite(BAT_HIGH_CHARGE, LOW); // charge with 50mA
+        digitalWrite(BAT_HIGH_CHARGE, LOW); // charge with 100mA
     }
     else
     {
