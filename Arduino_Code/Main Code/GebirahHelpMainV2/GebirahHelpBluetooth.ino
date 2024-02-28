@@ -251,19 +251,27 @@ static void bluetoothFunction() {
                     }
                     else if (AdminComman.value() == "BatteryVoltage")
                     {
-                        returnPercentage = false;
+                        bluetoothModified = true;
+                        jsonData["BattVoltage"] = "1";
+                        // returnPercentage = false;
                     }
                     else if (AdminComman.value() == "BatteryPercentage")
                     {
-                        returnPercentage = true;
+                        bluetoothModified = true;
+                        jsonData["BattVoltage"] = "0";
+                        // returnPercentage = true;
                     }
                     else if (AdminComman.value() == "SlowCharging")
                     {
-                        fastCharging = false;
+                        bluetoothModified = true;
+                        jsonData["FastChargng"] = "0";
+                        // fastCharging = false;
                     }
                     else if (AdminComman.value() == "FastCharging")
                     {
-                        fastCharging = true;
+                        bluetoothModified = true;
+                        jsonData["FastChargng"] = "1";
+                        // fastCharging = true;
                     }
                     else if (AdminComman.value() == "ResetDevice")
                     {
@@ -271,11 +279,19 @@ static void bluetoothFunction() {
                     }
                     else if (AdminComman.value() == "BatteryUnbound")
                     {
-                        BatterySoftLimit = false;
+                        bluetoothModified = true;
+                        jsonData["BattBounded"] = "0";
+                        // BatterySoftLimit = false;
                     }
                     else if (AdminComman.value() == "BatteryBound")
                     {
-                        BatterySoftLimit = true;
+                        bluetoothModified = true;
+                        jsonData["BattBounded"] = "1";
+                        // BatterySoftLimit = true;
+                    }
+                    else if (AdminComman.value() == "NoOfFall")
+                    {
+                        rtnVal = String(Fall_Detected);
                     }
                     else
                     {

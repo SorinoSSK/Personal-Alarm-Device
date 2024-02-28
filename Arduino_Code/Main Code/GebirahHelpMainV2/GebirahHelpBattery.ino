@@ -3,7 +3,8 @@ static void initBattery()
     chargeState = isCharging();
     pinMode(VBAT_ENABLE, OUTPUT);
     pinMode(BAT_CHARGE_STATE, INPUT);
-    if (fastCharging)
+    // if (fastCharging)
+    if (jsonData["FastChargng"] == "1")
     {
         digitalWrite(BAT_HIGH_CHARGE, LOW); // charge with 50mA
     }
@@ -78,7 +79,8 @@ static void broadcastBatteryBluetooth()
 {
     if (BatteryReadingRdy)
     {
-        if (returnPercentage)
+        // if (returnPercentage)
+        if (jsonData["BattVoltage"] == "0")
         {
             // Serial.print(batteryVoltage);
             // Serial.print(" ");
@@ -98,7 +100,8 @@ static void broadcastBatteryBluetooth()
 
 static float batteryLimit(float value) 
 {
-    if (BatterySoftLimit)
+    // if (BatterySoftLimit)
+    if (jsonData["BattBounded"] == "1")
     {
         if (value > 4.2)
         {

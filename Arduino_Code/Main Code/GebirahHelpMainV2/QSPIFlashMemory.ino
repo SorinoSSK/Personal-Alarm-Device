@@ -287,6 +287,10 @@ static void resetMemory()
 {
     jsonData["DeviceToken"] = "6814a608-5385-4ce1-917d-c51840bb75a0";
     jsonData["DResetToken"] = "52702af6-87d2-4290-a01b-036c88ec2811";
+    jsonData["NoOfFallDet"] = "0";
+    jsonData["FastChargng"] = "1";
+    jsonData["BattVoltage"] = "0";
+    jsonData["BattBounded"] = "1";
     DynamicJsonDocument doc(NoOfEmergencyContact);
     JsonArray EmergencyNoArr = doc.createNestedArray("EmergencyNoArr");
     jsonData["EmergencyNo"] = EmergencyNoArr;
