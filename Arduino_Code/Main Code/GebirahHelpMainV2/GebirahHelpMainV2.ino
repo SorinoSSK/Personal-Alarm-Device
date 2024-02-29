@@ -1,3 +1,5 @@
+#include <mic.h>
+
 // Include libraries
 #include <mic.h>                            // Used for Microphone
 #include "Wire.h"                           // Used for IMU
