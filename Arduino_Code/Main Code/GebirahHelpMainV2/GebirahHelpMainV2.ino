@@ -49,6 +49,10 @@ static uint32_t *BufMem             = (uint32_t *)&pBuf;
 // ===== IMU Settings ===== //
 #define CONVERT_G_TO_MS2 9.80665f
 LSM6DS3 myIMU(I2C_MODE, 0x6A);      // I2C device address 0x6A
+const int IMUBufferSize1            = 10;
+float IMUVal[IMUBufferSize1][6]     = {{0},{0}};
+const int IMUBufferSize2            = 2;
+float IMUDiffVal[IMUBufferSize2]    = {0};
 
 // ===== PDM Settings ===== //
 #if defined(WIO_TERMINAL)
@@ -97,7 +101,7 @@ long    batteryReadTime     = 0;
 int     filterCnt           = 0;
 float   pastBattVoltage[sizeOfFilter] = {0};
 float   BatteryVoltage      = 0;
-bool    BatterySoftLimit    = true;
+// bool    BatterySoftLimit    = true;
 bool    BatteryReadingRdy   = false;
 
 // // ===== Battery Kalman Filter ===== //
@@ -134,8 +138,10 @@ unsigned long sysAdminTimer     = millis();
 
 // ===== Modifiable Settings ===== //
 bool AdminMode                  = false;
-bool fastCharging               = true;
-bool returnPercentage           = true;
+// bool fastCharging               = true;
+// bool returnPercentage           = true;
+float lowerAccelTresh           = 3.5;
+uint16_t Fall_Detected          = 0;
 uint16_t Debug_Status           = 0;
 uint16_t sysAdmin_Time_Out      = 60*60*1000;
 uint16_t Bluetooth_Time_Out     = 30*1000;
@@ -204,7 +210,7 @@ void loop()
 {
     readAllPins();
     bluetoothFunction();
-    // IMUFunction();
+    IMUFunction();
     if (resetDevice)
     {
         resetMemory();
