@@ -74,10 +74,9 @@ static void FallDetectionType1(float* AccelNorm, float* GyroNorm)
 
 static void FallDetectionType2(float* AccelNorm)
 {
-    float coeff[IMUBufferSize3+1] = {3.93622378e-04,  1.42967102e-01, -2.70759014e-01,
-        -9.53103986e-02,  8.69277432e-03,  4.36438767e-02,
-        -5.02616630e-01,  1.34441937e-01,  2.20692998e-02,
-        -1.32444231e-01,  9.95052732e-02};
+    float coeff[IMUBufferSize3+1] = {-0.00068809,  0.11390063, -0.26251334, -0.06533656, -0.20371173,
+        -0.02432717, -0.19484031,  0.04825735,  0.06518361, -0.23732902,
+         0.00741389};
     float zValue = coeff[0];
     for (int i = 1; i < IMUBufferSize3; i ++)
     {
