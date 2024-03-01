@@ -32,7 +32,8 @@ static void IMUFunction()
     }
     else if (jsonData["FallDetects"] == "1")
     {
-        FallDetectionType2(&AcceNorm, myIMU.readFloatAccelX(), myIMU.readFloatAccelY(), myIMU.readFloatAccelZ());
+        // FallDetectionType2(&AcceNorm, myIMU.readFloatAccelX(), myIMU.readFloatAccelY(), myIMU.readFloatAccelZ());
+        FallDetectionType2(&AcceNorm);
     }
     // Serial.print(AcceNorm);
     // Serial.print(" - ");
@@ -57,14 +58,41 @@ static void FallDetectionType1(float* AccelNorm, float* GyroNorm)
     }
 }
 
-static void FallDetectionType2(float* AccelNorm, float AccelX, float AccelY, float AccelZ)
+// static void FallDetectionType2(float* AccelNorm, float AccelX, float AccelY, float AccelZ)
+// {
+//     float h1 = 1/(1 + exp(-(-3 + 0.3239177*AccelX + 1.35821812*AccelY - 0.91075929*AccelZ - 1.32501476*(*AccelNorm))));
+//     if (h1 >= 0.5)
+//     {
+//         if (Debug_Status != 0)
+//         {
+//             Serial.println("h1 Value: " + String(h1) + " - Falling Detected: " + String(*AccelNorm) + " - " + String(AccelX) + " - " + String(AccelY) + " - " + String(AccelZ));
+//         }
+//         Fall_Detected +=1;
+//         FirstBtnStatus = true;
+//     }
+// }
+
+static void FallDetectionType2(float* AccelNorm)
 {
-    float h1 = 1/(1 + exp(-(0.3239177*AccelX + 1.35821812*AccelY - 0.91075929*AccelZ - 1.32501476*(*AccelNorm))));
+    float coeff[IMUBufferSize3+1] = {3.93622378e-04,  1.42967102e-01, -2.70759014e-01,
+        -9.53103986e-02,  8.69277432e-03,  4.36438767e-02,
+        -5.02616630e-01,  1.34441937e-01,  2.20692998e-02,
+        -1.32444231e-01,  9.95052732e-02};
+    float zValue = coeff[0];
+    for (int i = 1; i < IMUBufferSize3; i ++)
+    {
+        IMUBuffVal[i-1] = IMUBuffVal[i];
+        zValue += coeff[i]*IMUBuffVal[i];
+    }
+    IMUBuffVal[IMUBufferSize3-1] = *AccelNorm;
+    zValue += coeff[IMUBufferSize3-1]*IMUBuffVal[IMUBufferSize3-1];
+    // float h1 = 1/(1 + exp(-(-3 + 0.3239177*AccelX + 1.35821812*AccelY - 0.91075929*AccelZ - 1.32501476*(*AccelNorm))));
+    float h1 = 1/(1 + exp(-zValue));
     if (h1 >= 0.5)
     {
         if (Debug_Status != 0)
         {
-            Serial.println("h1 Value: " + String(h1) + " - Falling Detected: " + String(*AccelNorm) + " - " + String(AccelX) + " - " + String(AccelY) + " - " + String(AccelZ));
+            Serial.println("h1 Value: " + String(h1) + " - Falling Detected: " + String(*AccelNorm));
         }
         Fall_Detected +=1;
         FirstBtnStatus = true;

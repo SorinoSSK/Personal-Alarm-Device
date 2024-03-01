@@ -53,6 +53,8 @@ const int IMUBufferSize1            = 10;
 float IMUVal[IMUBufferSize1][6]     = {{0},{0}};
 const int IMUBufferSize2            = 2;
 float IMUDiffVal[IMUBufferSize2]    = {0};
+const int IMUBufferSize3            = 10;
+float IMUBuffVal[IMUBufferSize3]    = {0};
 
 // ===== PDM Settings ===== //
 #if defined(WIO_TERMINAL)
