@@ -21,10 +21,18 @@
 #include "processing/filters.h"             // Used for Microphone (PDM) Sampling
 #endif
 
+// ===== Buzzer Settings =====//
+long beepTimer          = 0;
+uint8_t BuzzerPin       = 8;
+bool BuzzerState        = false;
+
 // ===== LED Settings ===== //
-String statusForLED = "";
-long LEDTimer       = 0;
-bool LEDToReset     = false;
+String statusForLED     = "";
+uint8_t LED_BLE         = 3;
+uint8_t LED_FIRST_BTN   = 5;
+uint8_t LED_SECON_BTN   = 4;
+long LEDTimer           = 0;
+bool LEDToReset         = false;
 
 // ===== QSPI Settings ===== //
 #define QSPI_STD_CMD_WRSR   0x01
@@ -55,6 +63,11 @@ const int IMUBufferSize2            = 2;
 float IMUDiffVal[IMUBufferSize2]    = {0};
 const int IMUBufferSize3            = 10;
 float IMUBuffVal[IMUBufferSize3]    = {0};
+uint8_t IMUFallDetectedBlinkRate    = 1000;
+bool IMUFallDetectedLEDLight        = false;
+bool IMUFallDetected                = false;
+bool IMUFallDetectedSent            = false;
+long IMUBlinkTimer                  = 0;
 
 // ===== PDM Settings ===== //
 #if defined(WIO_TERMINAL)
@@ -69,10 +82,10 @@ mic_config_t mic_config{
     .sampling_rate = 16000,
     #if defined(WIO_TERMINAL)
     .buf_size = 320,
-    .debug_pin = 1                  // Toggles each DAC ISR (if DEBUG is set to 1)
+    .debug_pin = 10                  // Toggles each DAC ISR (if DEBUG is set to 1)
     #elif defined(ARDUINO_ARCH_NRF52840)
     .buf_size = 1600,
-    .debug_pin = 1
+    .debug_pin = 10
     // .debug_pin = LED_BUILTIN        // Toggles each DAC ISR (if DEBUG is set to 1)
     #endif
 };
@@ -118,14 +131,21 @@ bool    BatteryReadingRdy   = false;
 // ===== Device Button Settings ===== //
 uint8_t FirstBtnPin     = 0;
 bool FirstBtnStatus     = false;
+bool FirstBtnStatusSent = false;
 bool FirstBtnFirstPress = false;
-bool FirstBtnRlseStatus = false;
+bool FirstBtnRlsePress  = false;
 long FirstBtnTimer      = 0;
 uint8_t SeconBtnPin     = 1;
 bool SeconBtnStatus     = false;
+bool SeconBtnStatusSent = false;
 bool SeconBtnFirstPress = false;
-bool SeconBtnRlseStatus = false;
+bool SeconBtnRlsePress  = false;
 long SeconBtnTimer      = 0;
+uint8_t ThirdBtnPin     = 2;
+bool ThirdBtnStatus     = false;
+bool ThirdBtnFirstPress = false;
+bool ThirdBtnRlseStatus = false;
+long ThirdBtnTimer      = 0;
 
 // ===== Other Settings ===== //
 DynamicJsonDocument jsonData(MemToUse);
@@ -220,10 +240,22 @@ void loop()
     }
     runLED();
     runBattery();
+    soundBuzzer();
+    resetDeviceFunc();
 }
 
 static void readAllPins()
 {
-    debounce(FirstBtnPin, &FirstBtnStatus, &FirstBtnFirstPress, &FirstBtnRlseStatus, &FirstBtnTimer);
-    debounce(SeconBtnPin, &SeconBtnStatus, &SeconBtnFirstPress, &SeconBtnRlseStatus, &SeconBtnTimer);
+    debounceLatch(FirstBtnPin, &FirstBtnStatus, &FirstBtnFirstPress, &FirstBtnRlsePress, &FirstBtnTimer, &FirstBtnStatusSent);
+    debounceLatch(SeconBtnPin, &SeconBtnStatus, &SeconBtnFirstPress, &SeconBtnRlsePress, &SeconBtnTimer, &SeconBtnStatusSent);
+    debounce(ThirdBtnPin, &ThirdBtnStatus, &ThirdBtnFirstPress, &ThirdBtnRlseStatus, &ThirdBtnTimer);
+}
+
+static void resetDeviceFunc()
+{
+    if (ThirdBtnStatus)
+    {
+        resetMemory();
+        ThirdBtnStatus = false;
+    }
 }

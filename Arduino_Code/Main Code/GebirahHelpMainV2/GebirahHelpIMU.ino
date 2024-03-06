@@ -26,6 +26,7 @@ static void IMUFunction()
     // IMUVal[IMUBufferSize][5] = myIMU.readFloatGyroZ();
     float AcceNorm = sqrt(pow(myIMU.readFloatAccelX(),2)+pow(myIMU.readFloatAccelY(),2)+pow(myIMU.readFloatAccelZ(),2));
     float GyroNorm = sqrt(pow(myIMU.readFloatGyroX(),2)+pow(myIMU.readFloatGyroY(),2)+pow(myIMU.readFloatGyroZ(),2));
+    // Serial.println(String(AcceNorm) + " - " + String(GyroNorm));
     if (jsonData["FallDetects"] == "0")
     {
         FallDetectionType1(&AcceNorm, &GyroNorm);
@@ -54,7 +55,8 @@ static void FallDetectionType1(float* AccelNorm, float* GyroNorm)
         }
         // bluetoothModified = true;
         Fall_Detected += 1;
-        FirstBtnStatus = true;
+        IMUFallDetected = true;
+        IMUBlinkTimer = millis();
     }
 }
 
@@ -68,15 +70,16 @@ static void FallDetectionType1(float* AccelNorm, float* GyroNorm)
 //             Serial.println("h1 Value: " + String(h1) + " - Falling Detected: " + String(*AccelNorm) + " - " + String(AccelX) + " - " + String(AccelY) + " - " + String(AccelZ));
 //         }
 //         Fall_Detected +=1;
-//         FirstBtnStatus = true;
+//         IMUFallDetected = true;
+//         IMUBlinkTimer = millis();
 //     }
 // }
 
 static void FallDetectionType2(float* AccelNorm)
 {
-    float coeff[IMUBufferSize3+1] = {-0.00068809,  0.11390063, -0.26251334, -0.06533656, -0.20371173,
-        -0.02432717, -0.19484031,  0.04825735,  0.06518361, -0.23732902,
-         0.00741389};
+    float coeff[IMUBufferSize3+1] = {-1.63256888,  0.08557334,  0.04785266, -0.01412922,  0.07236179,
+        -0.0280749 ,  0.07080622,  0.07315254, -0.02237923,  0.03112252,
+         0.04560297};
     float zValue = coeff[0];
     for (int i = 1; i < IMUBufferSize3; i ++)
     {
@@ -94,6 +97,7 @@ static void FallDetectionType2(float* AccelNorm)
             Serial.println("h1 Value: " + String(h1) + " - Falling Detected: " + String(*AccelNorm));
         }
         Fall_Detected +=1;
-        FirstBtnStatus = true;
+        IMUFallDetected = true;
+        IMUBlinkTimer = millis();
     }
 }

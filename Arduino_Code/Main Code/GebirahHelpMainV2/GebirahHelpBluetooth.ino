@@ -289,6 +289,18 @@ static void bluetoothFunction() {
                         jsonData["BattBounded"] = "1";
                         // BatterySoftLimit = true;
                     }
+                    else if (AdminComman.value() == "FallType1")
+                    {
+                        bluetoothModified = true;
+                        jsonData["FallDetects"] == "0";
+                        // BatterySoftLimit = false;
+                    }
+                    else if (AdminComman.value() == "FallType2")
+                    {
+                        bluetoothModified = true;
+                        jsonData["FallDetects"] == "1";
+                        // BatterySoftLimit = true;
+                    }
                     else if (AdminComman.value() == "NoOfFall")
                     {
                         rtnVal = String(Fall_Detected);
@@ -312,15 +324,22 @@ static void bluetoothFunction() {
                 storeJSONToMemory();
                 bluetoothModified = false;
             }
-            if (FirstBtnStatus)
+            if (FirstBtnStatus && !FirstBtnStatusSent)
             {
-                FirstBtnStatus = false;
+                // FirstBtnStatus = false;
+                FirstBtnStatusSent = true;
                 BtnCodeSend.setValue("SeowAlert1");
             }
-            else if (SeconBtnStatus)
+            else if (SeconBtnStatus && !SeconBtnStatusSent)
             {
-                SeconBtnStatus = false;
+                // SeconBtnStatus = false;
+                SeconBtnStatusSent = true;
                 BtnCodeSend.setValue("ChongAlert2");
+            }
+            if (!FirstBtnStatus && !SeconBtnStatus && IMUFallDetected && !IMUFallDetectedSent)
+            {
+                IMUFallDetectedSent = true;
+                BtnCodeSend.setValue("SeowAlert1");
             }
             if (!recording && record_ready)
             {
