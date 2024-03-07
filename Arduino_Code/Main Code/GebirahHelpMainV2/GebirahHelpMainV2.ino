@@ -63,7 +63,7 @@ const int IMUBufferSize2            = 2;
 float IMUDiffVal[IMUBufferSize2]    = {0};
 const int IMUBufferSize3            = 10;
 float IMUBuffVal[IMUBufferSize3]    = {0};
-uint8_t IMUFallDetectedBlinkRate    = 1000;
+uint8_t IMUFallDetectedBlinkRate    = 500;
 bool IMUFallDetectedLEDLight        = false;
 bool IMUFallDetected                = false;
 bool IMUFallDetectedSent            = false;
@@ -204,6 +204,8 @@ void setup()
     }
     // Initialise LED pin
     initLED();
+    // Initialise Buzzer's Pin
+    initBuzzer();
     // Initialise Battery's Pin
     initBattery();
     // Setup Microphone (PDM)

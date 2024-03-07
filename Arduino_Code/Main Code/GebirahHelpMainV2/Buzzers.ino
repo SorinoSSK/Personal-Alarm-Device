@@ -23,3 +23,8 @@ static void soundBuzzer()
         digitalWrite(BuzzerPin, LOW);
     }
 }
+
+static void initBuzzer()
+{
+    pinMode(BuzzerPin, OUTPUT);
+}

@@ -104,6 +104,7 @@ static void IMUFallLEDStatus(bool *statusValue1, bool *statusValue2, bool *statu
         if (currTimer - *IMUBlinkTimer > IMUFallDetectedBlinkRate)
         {
             IMUFallDetectedLEDLight = !IMUFallDetectedLEDLight;
+            *IMUBlinkTimer = millis();
         }
         if (IMUFallDetectedLEDLight)
         {
