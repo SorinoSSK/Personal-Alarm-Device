@@ -6,10 +6,12 @@ static void initBattery()
     // if (fastCharging)
     if (jsonData["FastChargng"] == "1")
     {
+        Serial.println("Fast Charging");
         digitalWrite(BAT_HIGH_CHARGE, LOW); // charge with 100mA
     }
     else
     {
+        Serial.println("Slow Charging");
         digitalWrite(BAT_HIGH_CHARGE, HIGH); // charge with 50mA
     }
 }

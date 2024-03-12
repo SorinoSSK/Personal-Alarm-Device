@@ -296,6 +296,7 @@ static void resetMemory()
     JsonArray EmergencyNoArr = doc.createNestedArray("EmergencyNoArr");
     jsonData["EmergencyNo"] = EmergencyNoArr;
     storeJSONToMemory();
+    resetDevice = false;
 }
 
 static void QSPIInit()

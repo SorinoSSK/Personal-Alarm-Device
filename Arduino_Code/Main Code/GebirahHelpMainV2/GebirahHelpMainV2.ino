@@ -202,6 +202,11 @@ void setup()
     {
         Serial.println("Starting Device...");
     }
+    // Initialise ROM
+    QSPIInit();
+    // Read from memory and initialise device
+    // Else overwrite with default
+    QSPIMemoryCheck();
     // Initialise LED pin
     initLED();
     // Initialise Buzzer's Pin
@@ -214,15 +219,11 @@ void setup()
     pinMode(P0_13, OUTPUT);
     // Check for IMU Status
     IMUInit();
-    // Initialise ROM
-    QSPIInit();
+
     // Startup Microphone (PDM)
     MICInit2();
     // Setup and Startup BLE
     BLEInit();
-    // Read from memory and initialise device
-    // Else overwrite with default
-    QSPIMemoryCheck();
     if (Debug_Status != 0)
     {
         Serial.println("Device finish setting up...");
