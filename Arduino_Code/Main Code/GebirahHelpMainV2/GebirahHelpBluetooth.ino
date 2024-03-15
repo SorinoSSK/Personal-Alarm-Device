@@ -330,11 +330,23 @@ static void bluetoothFunction() {
                 FirstBtnStatusSent = true;
                 BtnCodeSend.setValue("SeowAlert1");
             }
+            else if (!FirstBtnStatus && !FirstBtnStatusSent)
+            {
+                // FirstBtnStatus = false;
+                FirstBtnStatusSent = true;
+                BtnCodeSend.setValue("ChandraAlert1");
+            }
             else if (SeconBtnStatus && !SeconBtnStatusSent)
             {
                 // SeconBtnStatus = false;
                 SeconBtnStatusSent = true;
                 BtnCodeSend.setValue("ChongAlert2");
+            }
+            else if (!SeconBtnStatus && !SeconBtnStatusSent)
+            {
+                // SeconBtnStatus = false;
+                SeconBtnStatusSent = true;
+                BtnCodeSend.setValue("LaiAlert2");
             }
             if (!FirstBtnStatus && !SeconBtnStatus && IMUFallDetected && !IMUFallDetectedSent)
             {
