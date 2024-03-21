@@ -1,4 +1,4 @@
-static void debounce(uint8_t pinNo, bool* status, bool* firstStatus, bool* readyStatus, long* btnTimerActivate)
+static void debounce(uint8_t pinNo, bool* status, bool* firstStatus, bool* readyStatus, unsigned long* btnTimerActivate)
 {
     if (digitalRead(pinNo))
     {    
@@ -9,7 +9,7 @@ static void debounce(uint8_t pinNo, bool* status, bool* firstStatus, bool* ready
         }
         else
         {
-            long btnTimerCurrent = millis();
+            unsigned long btnTimerCurrent = millis();
             // 200ms for human reaction time
             if (btnTimerCurrent - *btnTimerActivate > 100)
             {
@@ -28,7 +28,7 @@ static void debounce(uint8_t pinNo, bool* status, bool* firstStatus, bool* ready
     }
 }
 
-static void debounceLatch(uint8_t pinNo, bool* status, bool* firstStatus, bool* secondStatus, long* btnTimerActivate, bool* btnStatusSent)
+static void debounceLatch(uint8_t pinNo, bool* status, bool* firstStatus, bool* secondStatus, unsigned long* btnTimerActivate, bool* btnStatusSent)
 {
     if (digitalRead(pinNo) && !*status)
     {    
@@ -40,7 +40,7 @@ static void debounceLatch(uint8_t pinNo, bool* status, bool* firstStatus, bool* 
         }
         else
         {
-            long btnTimerCurrent = millis();
+            unsigned long btnTimerCurrent = millis();
             // 200ms for human reaction time
             if (btnTimerCurrent - *btnTimerActivate > 100)
             {
@@ -48,7 +48,6 @@ static void debounceLatch(uint8_t pinNo, bool* status, bool* firstStatus, bool* 
                 *status = true;
                 IMUFallDetected = false;
                 IMUFallDetectedSent = false;
-                
             }
         }
     }
@@ -62,7 +61,7 @@ static void debounceLatch(uint8_t pinNo, bool* status, bool* firstStatus, bool* 
         }
         else
         {
-            long btnTimerCurrent = millis();
+            unsigned long btnTimerCurrent = millis();
             // 200ms for human reaction time
             if (btnTimerCurrent - *btnTimerActivate > 100)
             {

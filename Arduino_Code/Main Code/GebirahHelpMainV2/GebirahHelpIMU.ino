@@ -57,6 +57,7 @@ static void FallDetectionType1(float* AccelNorm, float* GyroNorm)
         Fall_Detected += 1;
         IMUFallDetected = true;
         IMUBlinkTimer = millis();
+        BuzzerState = true;
     }
 }
 

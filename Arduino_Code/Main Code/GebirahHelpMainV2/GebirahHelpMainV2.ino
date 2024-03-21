@@ -1,6 +1,7 @@
 #include <mic.h>
 
 // Include libraries
+// #include "Arduino.h"
 #include <mic.h>                            // Used for Microphone
 #include "Wire.h"                           // Used for IMU
 #include <stdio.h>                          // Used for type conversion
@@ -17,22 +18,25 @@
 #include "avr/interrupt.h"                  // Used for QSPI (ROM)
 #include "app_util_platform.h"              // Used for QSPI (ROM)
 #include "nrf_log_default_backends.h"       // Used for QSPI (ROM)
+#include "NRF52_MBED_TimerInterrupt.h"
 #if defined(WIO_TERMINAL)                   
 #include "processing/filters.h"             // Used for Microphone (PDM) Sampling
 #endif
 
 // ===== Buzzer Settings =====//
-long beepTimer          = 0;
-uint8_t BuzzerPin       = 8;
+unsigned long beepTimer = 0;
+uint8_t BuzzerPin       = 9;
 bool BuzzerState        = false;
 
 // ===== LED Settings ===== //
-String statusForLED     = "";
-uint8_t LED_BLE         = 3;
-uint8_t LED_FIRST_BTN   = 5;
-uint8_t LED_SECON_BTN   = 4;
-long LEDTimer           = 0;
-bool LEDToReset         = false;
+String statusForLED         = "";
+uint8_t LED_BLE             = 3;
+uint8_t LED_FIRST_BTN       = 5;
+uint8_t LED_SECON_BTN       = 4;
+unsigned long LEDTimer      = 0;
+unsigned long SideLEDTimer  = 0;
+bool SideLEDState           = false;
+bool LEDToReset             = false;
 
 // ===== QSPI Settings ===== //
 #define QSPI_STD_CMD_WRSR   0x01
@@ -67,7 +71,7 @@ uint8_t IMUFallDetectedBlinkRate    = 500;
 bool IMUFallDetectedLEDLight        = false;
 bool IMUFallDetected                = false;
 bool IMUFallDetectedSent            = false;
-long IMUBlinkTimer                  = 0;
+unsigned long IMUBlinkTimer         = 0;
 
 // ===== PDM Settings ===== //
 #if defined(WIO_TERMINAL)
@@ -110,14 +114,14 @@ FilterBuHp filter;
 #define Voltage_Div_Num     1510.0
 #define Voltage_Div_Den     510.0
 #define Voltage_Div_Offset  60.3
-const int sizeOfFilter      = 10;
-uint8_t chargeState         = 0;
-long    batteryReadTime     = 0;
-int     filterCnt           = 0;
+const int sizeOfFilter          = 10;
+uint8_t chargeState             = 0;
+unsigned long batteryReadTime   = 0;
+int     filterCnt               = 0;
 float   pastBattVoltage[sizeOfFilter] = {0};
-float   BatteryVoltage      = 0;
+float   BatteryVoltage          = 0;
 // bool    BatterySoftLimit    = true;
-bool    BatteryReadingRdy   = false;
+bool    BatteryReadingRdy       = false;
 
 // // ===== Battery Kalman Filter ===== //
 // double estBatteryVal    = 0.0;   // x - Initial Guess
@@ -134,18 +138,18 @@ bool FirstBtnStatus     = false;
 bool FirstBtnStatusSent = false;
 bool FirstBtnFirstPress = false;
 bool FirstBtnRlsePress  = false;
-long FirstBtnTimer      = 0;
+unsigned long FirstBtnTimer      = 0;
 uint8_t SeconBtnPin     = 1;
 bool SeconBtnStatus     = false;
 bool SeconBtnStatusSent = false;
 bool SeconBtnFirstPress = false;
 bool SeconBtnRlsePress  = false;
-long SeconBtnTimer      = 0;
+unsigned long SeconBtnTimer      = 0;
 uint8_t ThirdBtnPin     = 2;
 bool ThirdBtnStatus     = false;
 bool ThirdBtnFirstPress = false;
 bool ThirdBtnRlseStatus = false;
-long ThirdBtnTimer      = 0;
+unsigned long ThirdBtnTimer      = 0;
 
 // ===== Other Settings ===== //
 DynamicJsonDocument jsonData(MemToUse);

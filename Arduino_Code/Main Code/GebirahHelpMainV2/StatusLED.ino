@@ -38,7 +38,7 @@ static void resetStatus()
 {
     if (LEDToReset)
     {
-        long CurrentLEDTimer = millis();
+        unsigned long CurrentLEDTimer = millis();
         if (CurrentLEDTimer - LEDTimer >= 1000)
         {
             resetLED();
@@ -56,7 +56,15 @@ static void resetLED()
 
 static void BLELEDStatus(bool *statusValue)
 {
-    if (*statusValue)
+    if (chargeState)
+    {
+        blinkLED(&LED_BLE, &SideLEDState, &SideLEDTimer, 100);
+    }
+    else if (batteryLimit(BatteryVoltage) < 3.5)
+    {
+        blinkLED(&LED_BLE, &SideLEDState, &SideLEDTimer, 1000);
+    }
+    else if (*statusValue)
     {
         analogWrite(LED_BLE, 0);
     }
@@ -96,9 +104,9 @@ static void SeconBtnLEDStatus(bool *statusValue1, bool *statusValue2, uint8_t pi
     }
 }
 
-static void IMUFallLEDStatus(bool *statusValue1, bool *statusValue2, bool *statusValue3, long* IMUBlinkTimer, uint8_t pinNo1, uint8_t pinNo2)
+static void IMUFallLEDStatus(bool *statusValue1, bool *statusValue2, bool *statusValue3, unsigned long* IMUBlinkTimer, uint8_t pinNo1, uint8_t pinNo2)
 {
-    long currTimer = millis();
+    unsigned long currTimer = millis();
     if (!*statusValue2 && !*statusValue1 && *statusValue3)
     {
         if (currTimer - *IMUBlinkTimer > IMUFallDetectedBlinkRate)
@@ -116,5 +124,23 @@ static void IMUFallLEDStatus(bool *statusValue1, bool *statusValue2, bool *statu
             analogWrite(pinNo1, 0);
             analogWrite(pinNo2, 0);
         }
+    }
+}
+
+static void blinkLED(uint8_t *pinNo, bool *status, unsigned long *timer, uint8_t blinkRate)
+{
+    unsigned long currTimer = millis();
+    if (currTimer - *timer > blinkRate)
+    {
+        *status = !*status;
+        *timer = millis();
+    }
+    if (*status)
+    {
+        analogWrite(*pinNo, 255/4);
+    }
+    else
+    {
+        analogWrite(*pinNo, 0);
     }
 }
