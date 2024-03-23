@@ -158,9 +158,14 @@ uint32_t NoOfEmergencyContact   = JSON_ARRAY_SIZE(10);
 bool resetDevice                = false;
 bool bluetoothConnected         = false;
 bool bluetoothAuthenticated     = false;
+bool bluetoothAuthenticated2    = false;
 bool TokenModifyToken           = false;
+bool resendSOS                  = false;
+bool FirstBtnTriggered          = false;
+bool SeconBtnTriggered          = false;
 unsigned long BLETimer          = millis();
 unsigned long sysAdminTimer     = millis();
+unsigned long resendSOSTimer    = millis();
 
 // ===== Modifiable Settings ===== //
 bool AdminMode                  = false;
@@ -168,10 +173,11 @@ bool AdminMode                  = false;
 // bool returnPercentage           = true;
 float lowerAccelTresh           = 3.5;
 uint16_t Fall_Detected          = 0;
-uint16_t Debug_Status           = 0;
+uint16_t Debug_Status           = 2;
 uint16_t sysAdmin_Time_Out      = 60*60*1000;
 uint16_t Bluetooth_Time_Out     = 30*1000;
 uint16_t Modify_Token_Time_Out  = 30*1000;
+uint8_t  Resend_SOS_Time_Out    = 30*1000;
 
 // ===== Bluetooh Settings ===== //
 // UUID for Alert Notification Service

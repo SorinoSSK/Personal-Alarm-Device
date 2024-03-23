@@ -48,6 +48,7 @@ static void debounceLatch(uint8_t pinNo, bool* status, bool* firstStatus, bool* 
                 *status = true;
                 IMUFallDetected = false;
                 IMUFallDetectedSent = false;
+                *btnStatusSent = false;
             }
         }
     }

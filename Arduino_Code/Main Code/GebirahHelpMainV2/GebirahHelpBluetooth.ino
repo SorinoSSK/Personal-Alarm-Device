@@ -27,7 +27,7 @@ static void bluetoothFunction() {
     if (central.connected())
     {    
         // if bluetooth is authenticated, perform task
-        if (bluetoothAuthenticated)
+        if (bluetoothAuthenticated && bluetoothAuthenticated2)
         {
             if (getDvStatus.written())
             {
@@ -329,30 +329,46 @@ static void bluetoothFunction() {
                 // FirstBtnStatus = false;
                 FirstBtnStatusSent = true;
                 BtnCodeSend.setValue("SeowAlert1");
+                resendSOSTimer = millis();
             }
             else if (!FirstBtnStatus && !FirstBtnStatusSent)
             {
                 // FirstBtnStatus = false;
                 FirstBtnStatusSent = true;
                 BtnCodeSend.setValue("ChandraAlert1");
+                resendSOS = true;
+                resendSOSTimer = millis();
             }
             else if (SeconBtnStatus && !SeconBtnStatusSent)
             {
                 // SeconBtnStatus = false;
                 SeconBtnStatusSent = true;
                 BtnCodeSend.setValue("ChongAlert2");
+                resendSOS = true;
+                resendSOSTimer = millis();
             }
             else if (!SeconBtnStatus && !SeconBtnStatusSent)
             {
                 // SeconBtnStatus = false;
                 SeconBtnStatusSent = true;
                 BtnCodeSend.setValue("LaiAlert2");
+                resendSOS = true;
+                resendSOSTimer = millis();
             }
             if (!FirstBtnStatus && !SeconBtnStatus && IMUFallDetected && !IMUFallDetectedSent)
             {
                 IMUFallDetectedSent = true;
                 BtnCodeSend.setValue("SeowAlert1");
+                resendSOS = true;
+                resendSOSTimer = millis();
             }
+            if (BtnCodeSend.value() == "OK!")
+            {
+                resendSOS = false;
+                FirstBtnTriggered = false;
+                SeconBtnTriggered = false;
+            }
+            resendAlertFunc();
             if (!recording && record_ready)
             {
                 PDMsMicRecs.writeValue(recording_buf, sizeof(recording_buf));
@@ -392,13 +408,34 @@ static void bluetoothFunction() {
                     Serial.print("Received Bluetooth Authentication No.: ");
                     Serial.println(String(BLESAuthNum.value()));
                 }
-                if (jsonData["DeviceToken"] == String(BLESAuthNum.value()))
+                if (!bluetoothAuthenticated && jsonData["DeviceToken"] == String(BLESAuthNum.value()))
                 {
                     bluetoothAuthenticated = true;
                     BLESAuthNum.setValue("BLUETOOTH OK!");
                     if (Debug_Status != 0)
                     {
                         Serial.println("Bluetooth Authentication Successful.");
+                    }
+                }
+                else if (bluetoothAuthenticated && jsonData["UserDCToken"] == "")
+                {
+                    bluetoothAuthenticated2 = true;
+                    jsonData["UserDCToken"] = BLESAuthNum.value();
+                    storeJSONToMemory();
+                    if (Debug_Status != 0)
+                    {
+                        Serial.println("User Token Added.");
+                        Serial.println("Bluetooth2 Authentication Successful.");
+                    }
+                    BLESAuthNum.setValue("MODIFIED OK!");
+                }
+                else if (bluetoothAuthenticated && jsonData["UserDCToken"] == String(BLESAuthNum.value()))
+                {
+                    bluetoothAuthenticated2 = true;
+                    BLESAuthNum.setValue("BLUETOOTH2 OK!");
+                    if (Debug_Status != 0)
+                    {
+                        Serial.println("Bluetooth2 Authentication Successful.");
                     }
                 }
                 else
@@ -421,6 +458,7 @@ static void bluetoothFunction() {
         {
             bluetoothConnected = false;
             bluetoothAuthenticated = false;
+            bluetoothAuthenticated2 = false;
             recording = 0;
             record_ready = false; 
             if (Debug_Status != 0)
@@ -515,4 +553,25 @@ static void BLEInit()
     {
         Serial.println("BLE server is up and advertising!");
     }
+}
+
+static void resendAlertFunc()
+{
+    if (resendSOS)
+    {
+        unsigned long currTimer = millis();
+        if (currTimer - resendSOSTimer > Resend_SOS_Time_Out)
+        {
+            resendSOSTimer = millis();
+            if (FirstBtnTriggered)
+            {
+                FirstBtnStatusSent = false;
+            }
+            if (SeconBtnTriggered)
+            {
+                SeconBtnStatusSent = false;
+            }
+        }
+    }
+
 }

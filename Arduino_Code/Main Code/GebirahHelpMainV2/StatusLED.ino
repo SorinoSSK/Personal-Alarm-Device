@@ -58,7 +58,7 @@ static void BLELEDStatus(bool *statusValue)
 {
     if (chargeState)
     {
-        blinkLED(&LED_BLE, &SideLEDState, &SideLEDTimer, 100);
+        blinkLED(&LED_BLE, &SideLEDState, &SideLEDTimer, 500);
     }
     else if (batteryLimit(BatteryVoltage) < 3.5)
     {
