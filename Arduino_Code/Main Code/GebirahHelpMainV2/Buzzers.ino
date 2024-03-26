@@ -4,7 +4,7 @@ static void soundBuzzer()
     if (FirstBtnStatus || SeconBtnStatus || IMUFallDetected)
     {
         long currentTimer = millis();
-        if (currentTimer - beepTimer > 500)
+        if (currentTimer - beepTimer > 250)
         {
             BuzzerState = !BuzzerState;
             beepTimer = millis();

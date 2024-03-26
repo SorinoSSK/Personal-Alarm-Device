@@ -382,6 +382,7 @@ static void bluetoothFunction() {
                 }
                 record_ready = false; 
             }
+            getRSSIDistance(central);
             broadcastBatteryBluetooth();
         }
         // if bluetooth is not authenticated, wait for authentication
@@ -537,6 +538,7 @@ static void BLEInit()
     myService.addCharacteristic(BatteryStat);
     myService.addCharacteristic(BatCharStat);
     myService.addCharacteristic(AdminComman);
+    myService.addCharacteristic(BleRSSIValu);
 
     // Serial.println(BLESAuthNum.valueSize());
     // Serial.println(EmergencyNo.valueSize());

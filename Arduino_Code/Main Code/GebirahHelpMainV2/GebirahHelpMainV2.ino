@@ -192,8 +192,12 @@ BLEStringCharacteristic BtnCodeSend("00001811-0000-1000-8000-00805F9B34F6", BLER
 BLEStringCharacteristic BatteryStat("00001811-0000-1000-8000-00805F9B34F7", BLERead | BLENotify, 100);
 BLEStringCharacteristic BatCharStat("00001811-0000-1000-8000-00805F9B34F8", BLERead | BLENotify, 100);
 BLEStringCharacteristic AdminComman("00001811-0000-1000-8000-00805F9B34F9", BLERead | BLEWrite | BLENotify, 100);
+BLEStringCharacteristic BleRSSIValu("00001811-0000-1000-8000-00805F9B34FA", BLERead | BLENotify, 100);
 
 BLECharacteristic       PDMsMicRecs("00001811-0000-1000-8000-00805F9B34F3", BLERead | BLENotify , mic_config.buf_size);
+const int sizeOfRSSIFilter              = 10;
+int filterCntRSSI                       = 0;
+float pastRSSIValue[sizeOfRSSIFilter]   = {0};
 
 void setup()
 {

@@ -43,3 +43,24 @@ static void SOCMeanFilter(float VoltVal)
         BatteryVoltage = VoltVal;
     }
 }
+
+static float RSSIMeanFilter(float rssiValue)
+{
+    float tempRSSI = 0;
+    for(int i = 1; i < sizeOfRSSIFilter; i ++)
+    {
+        pastRSSIValue[i-1] = pastRSSIValue[i];
+        tempRSSI += pastRSSIValue[i];
+    }
+    pastRSSIValue[sizeOfRSSIFilter - 1] = rssiValue;
+    tempRSSI += rssiValue;
+    if (filterCntRSSI == sizeOfRSSIFilter)
+    {
+        return tempRSSI/sizeOfRSSIFilter;
+    }
+    else
+    {
+        filterCntRSSI += 1;
+        return rssiValue;
+    }
+}
