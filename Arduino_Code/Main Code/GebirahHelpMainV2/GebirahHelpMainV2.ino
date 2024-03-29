@@ -173,7 +173,7 @@ bool AdminMode                  = false;
 // bool returnPercentage           = true;
 float lowerAccelTresh           = 3.5;
 uint16_t Fall_Detected          = 0;
-uint16_t Debug_Status           = 2;
+uint16_t Debug_Status           = 0;
 uint16_t sysAdmin_Time_Out      = 60*60*1000;
 uint16_t Bluetooth_Time_Out     = 30*1000;
 uint16_t Modify_Token_Time_Out  = 30*1000;
@@ -202,6 +202,10 @@ float pastRSSIValue[sizeOfRSSIFilter]   = {0};
 void setup()
 {
     // Begin serial communication and wait for serial communicationMic
+    // Initialise LED pin
+    initLED();
+    // Turn on all LED
+    toggleLED(true);
     Serial.begin(9600);
     // Configure the data receive callback
     if (Debug_Status != 0)
@@ -215,14 +219,13 @@ void setup()
     if (Debug_Status != 0)
     {
         Serial.println("Starting Device...");
+        Serial.println("Debugging Mode:" + String(Debug_Status));
     }
     // Initialise ROM
     QSPIInit();
     // Read from memory and initialise device
     // Else overwrite with default
     QSPIMemoryCheck();
-    // Initialise LED pin
-    initLED();
     // Initialise Buzzer's Pin
     initBuzzer();
     // Initialise Battery's Pin
@@ -242,6 +245,8 @@ void setup()
     {
         Serial.println("Device finish setting up...");
     }
+    // Turn off all LED
+    toggleLED(false);
     statusForLED = "completeSetup";
 }
 

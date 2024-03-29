@@ -144,3 +144,19 @@ static void blinkLED(uint8_t *pinNo, bool *status, unsigned long *timer, uint8_t
         analogWrite(*pinNo, 0);
     }
 }
+
+static void toggleLED(bool status)
+{
+    if (status)
+    {
+        analogWrite(LED_BLE, 255/4);
+        analogWrite(LED_FIRST_BTN, 255/4);
+        analogWrite(LED_SECON_BTN, 255/4);
+    }
+    else
+    {
+        analogWrite(LED_BLE, 0);
+        analogWrite(LED_FIRST_BTN, 0);
+        analogWrite(LED_SECON_BTN, 0);
+    }
+}
